@@ -1,0 +1,163 @@
+/*
+*Base classes
+*/
+
+
+
+/*
+* Buttons
+*/
+ 
+        .button {
+	    display: block;
+	    font: 18px bold;
+	    font-family: Arial, Helvetica, sans-serif;
+	    padding: 8px 5px 8px 5px;
+	    margin: 0 auto;
+	    text-align: center;
+	    color: black;
+	    background-color: #00961e;
+  	    width:80%;
+  	    border: 0px solid;
+	    border-radius: 8px;
+        }
+        
+        .button:hover {
+		background-color: #66c078;
+		cursor: pointer;
+		}
+        
+        
+        
+        
+        .slider_input
+        {
+	    font: 16px bold;
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-color: black;
+	    }
+        
+        
+        .text_input
+        {
+	    font: 18px bold;
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-color: black;
+	    }
+	    
+	    
+	    .checkboxgroup_input
+	    {
+	    font: 16px bold;
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-color: #333333;}
+
+        
+        .bottom
+        {
+	    font: 10px bold;
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-color: #333333;
+	    background: #f4f4f4;
+	    padding: 10px;
+	    width:85%;
+	    float:left;
+	    border-radius: 10px;
+	    margin-left: 15px;
+	    margin-top: 15px;
+        margin-bottom: 10px;
+        text-align:right;
+        }
+        
+/*
+* Panels
+*/
+
+        
+        .left-panel
+        {
+	    font: 14px bold;
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-color: #333333;
+	    background: #f4f4f4;
+	    padding-top: 10px;
+	    width:20%;
+	    float:left;
+	    border-radius: 10px;
+	    margin-right: 10px;
+        margin-left: 10px;
+        margin-top: 1em;
+        }
+        
+        
+        .right-panel {font: 14px bold;
+        font-family: Arial, Helvetica, sans-serif;
+        font-color: #333333;
+	    background: #f4f4f4;
+	    padding-top: 10px;
+        padding-right: 50px;
+        padding-bottom: 50px;
+        padding-left: 50px;
+	    width:60%;
+	    float:left;
+        border-radius: 10px;
+        margin-right: 10px;
+        margin-left: 10px;
+        margin-top; 2em;
+        }
+
+
+/*
+* App tabs
+*/
+		.apptab-links a{
+		width: 90px;
+		height: 30px;
+		background:#00961e;
+		font-size: 18px;
+		border: 0px solid;
+        border-radius: 10px;
+		padding-top:1em;
+		font-family: Arial, Helvetica, sans-serif;
+		}
+		
+
+		
+		.apptab-links li:hover {
+		
+		}
+		.apptab-links a:hover {
+		background:#66c078;
+		text-decoration:none;
+		}
+        
+        .apptab-links li {
+		
+		}
+		
+		
+        
+        table.sortable
+        {
+	    font-family: Arial, Helvetica, sans-serif;;
+	    font-size: 14px;
+	    background: #fff;
+	    margin: 10px;
+	    min-width: 480px;
+	    border-collapse: collapse;
+	    text-align: center;
+        }
+        
+        
+        table.sortable thead
+        {
+	    font-size: 18px;
+	    font-weight: normal;
+	    color: #039;
+	    padding: 10px 8px;
+	    border-bottom: 2px solid #6678b1;
+	    text-align: center;
+        }
+
+
+
