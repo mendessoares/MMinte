@@ -1,4 +1,3 @@
-Currently having issues putting files back in github repo. Will have it done tonight.
 
 ##MMinte version 1.2 03/21/2016
 
