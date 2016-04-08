@@ -19,7 +19,7 @@ tar xfz ncbi-blast-${VERSION}+-universal-macosx.tar.gz
 rm ncbi-blast-${VERSION}+-universal-macosx.tar.gz
 
 pip install numpy
-pip install -r requirements.txt
+pip install -r installation/requirements.txt
 
 
 exit 0
