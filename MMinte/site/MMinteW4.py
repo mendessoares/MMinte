@@ -64,11 +64,13 @@ class Widget4(server.App):
     def getHTML(self,params):
 
         if params['text14'] == 'Yes':
-            #list @todo fix this
+            #list @todo fix this!!! Hacked!
             corrsFile = '../supportFiles/exampleRun/userFiles/corrs.txt'
             similFile = '../supportFiles/exampleRun/userOutput/similFile.txt'
             modelFolder = '../supportFiles/exampleRun/userOutput/models/'
             comFolder = '../supportFiles/exampleRun/userOutput/communityModels/'
+            createSubsetPairs(similFile,corrsFile)
+            list = '../tempFiles/pairsList.txt'
 
         else:
             list = params['text15'] #todo, create this on the fly from the list of speciesIDs
