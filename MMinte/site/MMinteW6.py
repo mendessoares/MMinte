@@ -54,7 +54,7 @@ class Widget6(server.App):
     
     def getHTML(self,params):
 
-        if params['text20'] == 'Yes':
+        if params['text20'] == 'Yes' or params['text1'] == "yes":
             inGRs = '../supportFiles/exampleRun/userOutput/growthRates.txt'
             outFolder = '../supportFiles/exampleRun/userOutput/'
             outInterFile = 'interactionsTable.txt'
