@@ -1,5 +1,5 @@
 
-##MMinte version 1.2 03/21/2016
+##MMinte version 1.3 08/06/2016
 
 ####CONTACT INFORMATION
 Project folder: www.github.com/mendessoares/MMinte <br>
@@ -17,7 +17,7 @@ __MMinte__ is composed of 7 widgets that may be run sequentially or individually
 * _Widget 3_:  Metabolic models for each genome ID are reconstructed and gap-filled using ModelSEED and downloaded to the user’s local machine.
 * _Widget 4_:  Metabolic models of 2-species communities are created using COBRA Tools for the python computational framework (COBRApy). 
 * _Widget 5_: Under defined metabolic conditions, the growth rates of each species in isolation and when in the presence of another species in the community are estimated.
-* _Widget 6_: The kinds of interactions occurring between the pairs of species on the metabolic conditions defined Widget 5 are predicted. The interactions are either positive (commensalism, mutualism) or negative (parasitism, amensalism, competition).
+* _Widget 6_: The kinds of interactions occurring between the pairs of species on the metabolic conditions defined Widget 5 are predicted. The interactions are either positive (commensalism, mutualism) or negative (parasitism, amensalism, competition). The interactions are determined by their effect on the predicted growth rates of the species when compared to growth in isolation. When the effect is over 10%, we consider that an interaction is occurring. The direction is considered negative of positive to the focal species depending on whether the species is predicted to grow slower or faster in a community, respectively. Positive interactions are the ones where at least one species benefits from the interactions and no species suffers from it (mutualism: + +; commensalism: + 0). Negative interaction are interactions where at least one species suffers negative from the interactions (parasitism: + -; amensalsm: - 0; competition: - -). Neutralism represents no interactions between the species.
 * _Widget 7_: A network is plotted with D3.js using the initial information of associations between the pairs of OTUs provided by the user, and the kinds of interactions predicted to be occurring.
 
 
@@ -54,15 +54,14 @@ If you have neither __Python 2.7__ or __pip__ installed you can either install t
 
 #####How do I setup MMinte?
 1. Download the __MMinte__ package. To do this go to http://github.com/mendessoares/MMinte and click on Download ZIP button on the right side of the screen. This will (likely) download the ZIP file to your Downloads folder.
-2. Your Downloads folder now has a MMinte_package.zip file. You can uncompress this file by double clicking the file. This will create the folder MMinte_package on your downloads folder. Move this folder to where you would like to keep it permanently. I suggest you move it to your Documents folder. You can do this by dragging the folder to Documents folder, or through command line. Here's how to do the latest. Open terminal, then type: ``cd ~/Downloads/MMinte-master`` and press Enter. Then type ``mv MMinte_package/ ~/Documents/`` and press Enter. The MMinte_package folder should now be on your Documents folder.
-2. Use the terminal on your machine to go to the MMinte_package folder by typing ``cd ~/Documents/MMinte_package/``
-3. Go to the __MMinte__ folder by typing ``cd MMinte``
-4. Create a virtual environment by typing ``virtualenv env``.
-5. This will create a folder in __MMinte__ called env. This is where all the packages and modules you need for doing all the analysis will be stored. This avoids potential conflicts between the versions of packages and modules needed for __MMinte__ and any you may have in your system. You can see this folder listed if you type ``ls`` on the terminal
-6. Enter your virtual environment by typing ``source env/bin/activate`` . This command assumes you are right outside your env folder. If you are not sure where you are, type ``cd ~/Documents/MMinte_package/MMinte/`` , press enter, and try entering your virtual environment again.
-7. We will now install all the dependencies required for __MMinte__ to run. If you are working on a MacOS system, type ``bash installation/install-requiredPKGMacOS.sh`` . If you are working on a Linux system, type ``bash installation/install-requiredPKGLinux.sh`` . Wait for everything to get installed. The Python module __libsbml__ takes quite a while to get installed, so the whole process takes around 10 minutes on an average speed internet connection. If no warnings show up on the terminal window when the prompt in the terminal (``$``) shows up, then all was successfully installed. If you get an error message from BioPython saying that numpy is not installed, don't worry. numpy is not needed for __MMinte__ to work.
-8. You are now ready to run __MMinte__ from your virtual environment.
-10. If you don't want to run __MMinte__ at this point, you can deactivate your virtual environment by typing ``deactivate`` and closing the terminal. If you want to go ahead and run __MMinte__, go to the section __How do I run MMinte__  and start from step 4.
+2. Your Downloads folder now has a MMinte_package.zip file. You can uncompress this file by double clicking the file. This will create the folder MMinte_package on your downloads folder. Move this folder to where you would like to keep it permanently. I suggest you move it to your Documents folder. You can do this by dragging the folder to Documents folder, or through command line. Here's how to do the latest. Open terminal, then type: ``cd ~/Downloads/MMinte-master`` and press Enter. Then type ``mv MMinte/ ~/Documents/`` and press Enter. The MMinte_package folder should now be on your Documents folder.
+2. Use the terminal on your machine to go to the MMinte_package folder by typing ``cd ~/Documents/MMinte/``
+3. Create a virtual environment by typing ``virtualenv env``.
+4. This will create a folder in __MMinte__ called env. This is where all the packages and modules you need for doing all the analysis will be stored. This avoids potential conflicts between the versions of packages and modules needed for __MMinte__ and any you may have in your system. You can see this folder listed if you type ``ls`` on the terminal
+5. Enter your virtual environment by typing ``source env/bin/activate`` . This command assumes you are right outside your env folder. If you are not sure where you are, type ``cd ~/Documents/MMinte/`` , press enter, and try entering your virtual environment again.
+6. We will now install all the dependencies required for __MMinte__ to run. If you are working on a MacOS system, type ``bash installation/install-requiredPKGMacOS.sh`` . If you are working on a Linux system, type ``bash installation/install-requiredPKGLinux.sh`` . Wait for everything to get installed. The Python module __libsbml__ takes quite a while to get installed, so the whole process takes around 10 minutes on an average speed internet connection. If no warnings show up on the terminal window when the prompt in the terminal (``$``) shows up, then all was successfully installed. If you get an error message from BioPython saying that numpy is not installed, don't worry. numpy is not needed for __MMinte__ to work.
+7. You are now ready to run __MMinte__ from your virtual environment.
+8. If you don't want to run __MMinte__ at this point, you can deactivate your virtual environment by typing ``deactivate`` and closing the terminal. If you want to go ahead and run __MMinte__, go to the section __How do I run MMinte__  and start from step 4 in the section title __How do I run MMinte?__.
 
 
 ####FILE LIST (essential)
@@ -148,7 +147,7 @@ requests==2.8.1
 3. From this location type ``source env/bin/activate`` . This will activate your virtual environment. If you are not sure if your virtual environment is activated or not, you can check if the line of your prompt in the terminal has ``(env)`` in the beginning.
 4. Go to the site folder by typing ``cd site``.
 5. Launch __MMinte__ by typing ``python launchMMinte.py``
-6. Open a Firefox browser and go to the address http://127.0.0.1:8080/ . A window asking if you want to accept incoming network connections may pop up. You can just say yes to that. The following message shows up in the terminal, but you don't have to worry about it:
+6. Open a web browser and go to the address http://127.0.0.1:8080/ . A window asking if you want to accept incoming network connections may pop up. You can just say yes to that. The following message shows up in the terminal, but you don't have to worry about it:
 ``CherryPy Checker:``
 ``The Application mounted at ' ' has an empty config.``
  
@@ -159,10 +158,60 @@ requests==2.8.1
 11. At this point, you can also close the terminal window (if you really want to.)
 
 
+###MMinte command line examples
+Note that these examples assume that you have the python packages cobra, os, itertools installed in your system outside the virtualenv.
+
+__Reconstructing models in ModelSEED__
+1. You should start by going into the site folder by typing ``cd ~/Documents/MMinte/site`` in the terminal.
+2. Once there, start a python session by typing ``python``
+3. Within python, import the widget3 by typing ``import widget3``
+4. You can now use the function in widget 3 that allows you to reconstruct a model. All you need is a genomeID and a folder where your model will be stored. For instance, we will reconstruct a model for the species Bacteroides thetatiotaomicron VPI-5482 and store it in a folder named "CommandLineModels". Just type:
+``import os``
+``modelID = '22618.12'``
+``modelFolder = '../CommandLineModels/'``
+``if not os.path.exists(modelFolder): os.makedirs(modelFolder)`` press return twice
+``widget3.getModels(modelID, modelFolder)``
+5. You should be able to find that model in the CommandLineModels folder you just created.
+
+__Creating a list of all possible pairwise combinations of the models in your models folder__
+
+1. You should start by going into the site folder by typing ``cd ~/Documents/MMinte/site`` in the terminal.
+2. Once there, start a python session by typing ``python``
+3. Within python, import the widget3 by typing ``import widget4`` 
+4. Import os and itertools to your session as well by typing ``import os,itertools``
+5. Specify where your species models are (we will just use the modelFolder from the previous example): ``modelsFolder = '../CommandLineModels/'``
+6. Speficy where you want the txt file with the list of pairs to go: ``outputFolder= '../pairsOfSpecies/'``
+7. Specify what you want the text file with the list of pairs to be called: ``outputFile = 'listPairs.txt'``
+8. Create the name of the path to your output files: ``output = outputFolder + outputFile``
+9. Specify where the output file will go ``if not os.path.exists(outputFolder): os.makedirs(outputFolder)`` press return twice
+10. Create the list with all pairs: ``widget4.createAllPairs(modelsFolder,output)``
+11. You should find the list of pairs in the folder pairsOfSpecies.
 
 
+__Creating a 2 species community model__
+1. You should start by going into the site folder by typing ``cd ~/Documents/MMinte/site`` in the terminal.
+2. Once there, start a python session by typing ``python``
+3. Within python, import the widget3 by typing ``import widget4`` 
+4. Import os and itertools to your session as well by typing ``import os,itertools``
+5. Specify which species models you want use and where to find them: ``modelFileA = '../CommandLineModels/22618.12.sbml'`` and ``modelFileB = '../CommandLineModels/28116.7.sbml'``
+6. Specify where you want to put the models. We will put these into a folder inside the CommandLineModels folder called CommunityModels: ``comFolder = '../CommandLineModels/CommunityModels/'``
+7. If this folder doesn't exist, then create it: ``if not os.path.exists(comFolder): os.makedirs(comFolder)`` press return twice
+8. Create the community model: ``widget4.createCommunityModel(modelFileA, modelFileB, comFolder)``
 
 ####SOME FAQS
+
+#####What if I have installation issues?
+Sometimes it may be troublesome to install new software in your local machine. Here we will list issues that users have had during installation and what the solution to fix them were. If you don't find a solution to your problem, raise an issue on github or send us a mail (microbialmetabolicinteractions@gmail.com). We will make our best to help you out.
+
+1. __The user said:__ Typing virtualenv env on command line gave an error message: ImportError: dlopen(/Users/me/Documents/MMinte-master/MMinte/env/lib/python2.7/lib-dynload/_io.so, 2): Symbol not found: __PyCodecInfo_GetIncrementalDecoder
+__The solution the user found was the following:__
+ I could only fix it by downgrading from python 2.7.11 to 2.7.9, on a Mac Mavericks
+2. __The user said:__ Starting MMinte then gave the following error:
+File "/Users/me/Documents/MMinte-master/MMinte/env/lib/python2.7/locale.py", line 475, in _parse_localename, raise ValueError, 'unknown locale: %s' % localename
+__The solution the user found was the following:__
+I fixed this by adding the following two lines to my .bash_profile:
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
 
 #####What kind of files does MMinte need as an input?
 The input files that are essential for __MMinte__ to start running are two:
@@ -184,5 +233,20 @@ Your files can go anywhere in your system really. As long as you tell each widge
 
 ####COPYRIGHT AND LICENSING INFORMATION
 
+__MMinte__ is licensed under the following BSD 3-clause license: 
+
+Copyright (c) 2016, <copyright holder>
+All rights reserved.
+Redistribution and noncommercial use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the Mayo Clinic nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+For a license for commercial use, please contact Mayo Clinic Ventures at mayoclinicventures@mayo.edu.
 
 
