@@ -35,7 +35,7 @@ Metabolic models of 2-species communities are created using COBRA Toolbox for th
 * On the field that asks for the path to the models folder type: <b> ../CaseStudy2/output/models/ </b>
 * On the field that asks for the path to the folder where the 2-species community metabolic models will be stored type: <b> ../CaseStudy2/output/comModels/</b>
 
-Each 2-species community model takes abou 15 seconds to create. You can find all these models in the folder <b>../CaseStudy1/output/comModels/</b>
+Each 2-species community model takes abou 15 seconds to create. You can find all these models in the folder <b>../CaseStudy2/output/comModels/</b>
 
 
 
