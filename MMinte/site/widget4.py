@@ -9,7 +9,7 @@ import os
 
 '''
 
-def createAllPairs(modelFolder):
+def createAllPairs(modelFolder,outputFolder = '../tempFiles/pairsList.txt'):
 
     '''
     This function lists the files for species metabolic models that exist in the folder specified in modelFolder and creates a list with all possible pairwise combinations of species models. This function is only called if the user doesn't provide a file with the list of species to pair or the files required for the function createSubsetPairs (below).
@@ -30,7 +30,7 @@ def createAllPairs(modelFolder):
     cherrypy.log('There are %d files in the folder %s .' %(len(listFiles),modelFolder))
 
 
-    pairsListFile = open('../tempFiles/pairsList.txt','w')
+    pairsListFile = open(outputFolder,'w')
 
     print>>pairsListFile, 'OtuAGenomeID', 'OtuBGenomeID'
 
