@@ -226,7 +226,14 @@ class Index(server.App):
         
         
     </p>
-    <br>
+
+    <h2>
+    Tracking the progress of the analysis
+    </h2>
+
+    <p>
+        Note that if you want to track the progress of the analysis you should consult the log files. To do this, navigate to the folder /supportFiles/logs/ in a new terminal window. As the analysis is ongoing the logError_file.txt will be updated. If you type tail -f logError_file.txt in the terminal, you will be able to see the progression. You can find more information in the README file.
+    </p>
     <br>
     <br>
     <br>
