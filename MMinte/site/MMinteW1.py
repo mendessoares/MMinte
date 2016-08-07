@@ -65,7 +65,7 @@ class Widget1(server.App):
 
     def getHTML(self,params):
 
-        if params['text1'] == "Yes":
+        if params['text1'] == "Yes" or params['text1'] == "yes":
             corrsFile = '../supportFiles/exampleRun/userFiles/corrs.txt'
             sequencesFile = '../supportFiles/exampleRun/userFiles/otus.fasta'
             outFolder = '../supportFiles/exampleRun/userOutput/'
