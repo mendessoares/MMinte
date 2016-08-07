@@ -83,7 +83,7 @@ class Widget7(server.App):
         
     def getHTML(self,params):
 
-        if params['text24'] == 'Yes':
+        if params['text24'] == 'Yes' or params['text1'] == "yes":
             inNodes = '../supportFiles/exampleRun/userOutput/similFile.txt'
             inLinks = '../supportFiles/exampleRun/userFiles/corrs.txt'
             inInter = '../supportFiles/exampleRun/userOutput/interactionsTable.txt'
