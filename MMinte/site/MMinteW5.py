@@ -16,7 +16,7 @@ class Widget5(server.App):
 
         { "type":"dropdown",
         "key":"dropdown1",
-        "label" : "<font size=3pt> You can determine which kind of metabolites are available for the organisms by choosing a diet </font>",
+        "label" : "<font size=3pt> You can determine which kind of metabolites are available for the organisms by choosing a diet. In the 'Complete' diet, 380 metabolites are available to the model, with a flux for the import reactions of 100 mmol/gDW/hr. 'Variant 1' contains the same metabolites, but the reaction fluxes are 10 mmol/gDW/hr, and in 'Variant 2' the fluxes are 1 mmol/gDW/hr. The other Variants are place holders for user defined diets.</font>",
         "options" :[{"label": "Complete", "value":"Complete"},
                     {"label": "Variant 1", "value":"Variant1"},
                     {"label": "Variant 2", "value":"Variant2"},
@@ -65,7 +65,7 @@ class Widget5(server.App):
     
     def getHTML(self,params):
 
-        if params['text16'] == 'Yes':
+        if params['text16'] == 'Yes' or params['text1'] == "yes":
             food = 'Complete'
             comFolder = '../supportFiles/exampleRun/userOutput/communityModels/'
             outFolder = '../supportFiles/exampleRun/userOutput/'
