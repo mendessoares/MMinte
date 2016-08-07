@@ -1,5 +1,4 @@
 
-
 from spyre import server
 from widget4 import totalEXRxns,createEXmodel,createReverseEXmodel, addEXMets2SpeciesEX, replaceRxns,replaceMets,createCommunityModel,allPairComModels,createAllPairs,createSubsetPairs
 import os, os.path
@@ -63,7 +62,7 @@ class Widget4(server.App):
         
     def getHTML(self,params):
 
-        if params['text14'] == 'Yes':
+        if params['text14'] == 'Yes' or params['text1'] == "yes":
             #list @todo fix this!!! Hacked!
             corrsFile = '../supportFiles/exampleRun/userFiles/corrs.txt'
             similFile = '../supportFiles/exampleRun/userOutput/similFile.txt'
