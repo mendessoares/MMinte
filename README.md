@@ -235,7 +235,7 @@ Your files can go anywhere in your system really. As long as you tell each widge
 
 __MMinte__ is licensed under the following BSD 3-clause license: 
 
-Copyright (c) 2016, <copyright holder>
+Copyright (c) 2016, Mayo Foundation for Medical Education and Research
 All rights reserved.
 Redistribution and noncommercial use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
