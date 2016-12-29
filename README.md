@@ -1,3 +1,6 @@
+# Announcement 12/29/2016
+
+##The ModelSEED server is not responding to requests from MMinte. We are working to fix this issue and hope to have everything up and running again next week. Thanks - H.
 
 ##MMinte version 1.3 08/06/2016
 
