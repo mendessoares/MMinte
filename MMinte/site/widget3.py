@@ -29,55 +29,61 @@ def getModels(id, modelFolder, url='https://p3.theseed.org/services/ProbModelSEE
     # Create the headers for the request to the server.
     headers = dict()
     headers['AUTHORIZATION'] = token
-
-    # Create the body of the request for the ModelReconstruction() method.
-    input = dict()
-    input['method'] = 'ProbModelSEED.ModelReconstruction'
-    input['params'] = { 'genome': 'PATRIC:%s' %id, 'gapfill': 1, 'predict_essentiality': 0, 'media':'/chenry/public/modelsupport/media/ArgonneLBMedia' }
-    input['version'] = '1.1'
-    
-    # Send the request to the server and get back a response.
-    # Added exception because the website gave an error and just stopped.
-    
-    
     requests.packages.urllib3.disable_warnings()
-    response = requests.post(url, data=json.dumps(input), headers=headers, verify=False)
-            
-    if response.status_code != requests.codes.OK:
-        response.raise_for_status()
-        
-    jobid = json.loads(response.text)['result'][0] # Get the output from the method in the response
 
-    cherrypy.log('The job id for this particular run is: %s' %jobid)
-    
-    # Wait for the job to finish when model reconstruction is run as an app.
-    if runapp:
-        input['method'] = 'ProbModelSEED.CheckJobs'
-        input['params'] = { 'jobs': [ jobid ] }
-        done = False
-        while not done:
-            response = requests.post(url, data=json.dumps(input), headers=headers, verify=False)
-            if response.status_code != requests.codes.OK:
-                response.raise_for_status()
-            output = json.loads(response.text)['result'][0]
-            if jobid in output:
-                task = output[jobid]
-                print task['status']
-                cherrypy.log('The status of this job is %s' %task['status'])
-                if task['status'] == 'failed':
-                    message = task['error'].split('\n')
-                    for line in message: print line
-                    raise Exception
-                elif task['status'] == 'completed':
-                    done = True
-                    cherrypy.log('The job has been completed')
+    # See if the model is already available.
+    input = dict()
+    input['version'] = '1.1'
+    input['method'] = 'Workspace.get'
+    input['params'] = {'objects': ['/mendessoares/modelseed/'+id], 'metadata_only': 1}
+    response = requests.post(wsurl, data=json.dumps(input), headers=headers, verify=False)
+
+    if response.status_code != requests.codes.OK:
+        # Create the body of the request for the ModelReconstruction() method.
+        input['method'] = 'ProbModelSEED.ModelReconstruction'
+        input['params'] = { 'genome': 'PATRIC:%s' %id, 'gapfill': 1, 'predict_essentiality': 0, 'media':'/chenry/public/modelsupport/media/ArgonneLBMedia' }
+
+        # Send the request to the server and get back a response.
+        # Added exception because the website gave an error and just stopped.
+
+
+        response = requests.post(url, data=json.dumps(input), headers=headers, verify=False)
+
+        if response.status_code != requests.codes.OK:
+            response.raise_for_status()
+
+        jobid = json.loads(response.text)['result'][0] # Get the output from the method in the response
+
+        cherrypy.log('The job id for this particular run is: %s' %jobid)
+
+        # Wait for the job to finish when model reconstruction is run as an app.
+        if runapp:
+            input['method'] = 'ProbModelSEED.CheckJobs'
+            input['params'] = {}
+            done = False
+            while not done:
+                response = requests.post(url, data=json.dumps(input), headers=headers, verify=False)
+                if response.status_code != requests.codes.OK:
+                    response.raise_for_status()
+                output = json.loads(response.text)['result'][0]
+                if jobid in output:
+                    task = output[jobid]
+                    print task['status']
+                    cherrypy.log('The status of this job is %s' %task['status'])
+                    if task['status'] == 'failed':
+                        message = task['error'].split('\n')
+                        for line in message: print line
+                        raise Exception
+                    elif task['status'] == 'completed':
+                        done = True
+                        cherrypy.log('The job has been completed')
+                    else:
+                        time.sleep(10)
                 else:
-                    time.sleep(10)
-            else:
-                raise Exception
-     
-            print task
-    
+                    raise Exception
+
+                print task
+
     # Create the body of the request for the export_model() method.
     # When ModelSEED server is reliable we could switch back to this method.
     # input['method'] = 'ProbModelSEED.export_model'
