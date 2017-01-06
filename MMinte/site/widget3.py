@@ -24,7 +24,7 @@ def getModels(id, modelFolder, url='https://p3.theseed.org/services/ProbModelSEE
     cherrypy.log("We started the script to get models . We will reconstruct the model %s, get it from ModelSEED and export it to the folder: %s" %(id,modelFolder))
 
 
-    token = 'un=mendessoares|tokenid=6D172906-93C2-11E5-8500-0FA9682E0674|expiry=1480025896|client_id=mendessoares|token_type=Bearer|SigningSubject=http://rast.nmpdr.org/goauth/keys/E087E220-F8B1-11E3-9175-BD9D42A49C03|this_is_globus=globus_style_token|sig=584b3513a70a45b2c8e3b3368a51fb5816ed990956ebff53ace27b47df63d70cb29e155701f3c94609409be1c3c616b6e0d2c2641b32df7eb00612b9a15c602686fb5ea4d472e1d75fb2df5910ff695030e3c52eb74111857dd1d06e4443e38ac3532da776041a855619a8505b14a352713d2129602097ece3ece1701bd334c7'
+    token = 'un=mendessoares|tokenid=DF8D12F6-D45E-11E6-9B57-1B9C682E0674|expiry=1515277462|client_id=mendessoares|token_type=Bearer|SigningSubject=http://rast.nmpdr.org/goauth/keys/E087E220-F8B1-11E3-9175-BD9D42A49C03|this_is_globus=globus_style_token|sig=b6e67425ebe6c5aef7b52f5e3d38f4b5b615d401922379330709f88d827f7b53772ab3cb14d10d41821c9906238dafb17a93adcd006efd56d316fc4f9f9f38162d24b0bdff9a4f4311588ea8431bf77d0cbad6b6f4a07871fb7072106ff7ae15ca056f381c13486d2145d84466de0866a49591707d2b7d516de26738abed0b1f'
             
     # Create the headers for the request to the server.
     headers = dict()
