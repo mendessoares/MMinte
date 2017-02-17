@@ -23,3 +23,15 @@ Use pip to install mminte-mp from `PyPI <https://pypi.python.org/pypi/mminte-mp>
 mminte requires the cobra, pandas, and six packages. Using SBML models requires
 the python-libsbml and lxml packages.
 
+How to cite MMinte
+------------------
+
+If you use MMinte for an analysis, please cite this paper:
+`MMinte: an application for predicting metabolic interactions among the microbial
+species in a community <http://dx.doi.org/doi:10.1186/s12859-016-1230-3>`_
+
+References
+----------
+
+The models provided in the mminte/test/data folder are from `Anoxic Conditions Promote
+Species-Specific Mutualism between Gut Microbes In Silico <http://dx.doi.org/doi:10.1128/AEM.00101-15>`_.
