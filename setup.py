@@ -40,6 +40,7 @@ setup(
     name='mminte',
     version=version,
     packages=find_packages(),
+    scripts=['bin/launchMMinte.py'],
     setup_requires=[],
     install_requires=requirements,
     tests_require=['pytest'],
