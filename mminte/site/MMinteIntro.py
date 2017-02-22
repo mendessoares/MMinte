@@ -1,29 +1,35 @@
 from spyre import server
-import io
+from os.path import join
 import os
-
-
-
 import cherrypy
+from pkg_resources import resource_filename
+from io import BytesIO
+
+
 class custom_root(server.Root):
     @cherrypy.expose
     def image1(self, **args):
-        import io
-        buffer = io.BytesIO()
-        ROOT_DIR = os.path.dirname(os.path.realpath('static/images/3485812-14.jpg'))
-        f = open(ROOT_DIR+'/3485812-14.jpg','rb' )
-        buffer.write(f.read())
-        f.close()
+        buffer = BytesIO()
+        with open(resource_filename(__name__, 'static/images/3485812-14.jpg')) as handle:
+            buffer.write(handle.read())
         return buffer.getvalue()
+        # ROOT_DIR = os.path.dirname(os.path.realpath('static/images/3485812-14.jpg'))
+        # f = open(ROOT_DIR+'/3485812-14.jpg','rb' )
+        # buffer.write(f.read())
+        # f.close()
+        # return buffer.getvalue()
+
     @cherrypy.expose
     def image2(self, **args):
-        import io
-        buffer = io.BytesIO()
-        ROOT_DIR = os.path.dirname(os.path.realpath('static/images/flow.jpg'))
-        f = open(ROOT_DIR+'/flow.jpg','rb' )
-        buffer.write(f.read())
-        f.close()
+        buffer = BytesIO()
+        with open(resource_filename(__name__, 'static/images/flow.jpg')) as handle:
+            buffer.write(handle.read())
         return buffer.getvalue()
+        # ROOT_DIR = os.path.dirname(os.path.realpath('static/images/flow.jpg'))
+        # f = open(ROOT_DIR+'/flow.jpg','rb' )
+        # buffer.write(f.read())
+        # f.close()
+        # return buffer.getvalue()
 
 server.Root=custom_root
 
@@ -35,8 +41,8 @@ class Index(server.App):
                 "on_page_load": True}]
     
     def getCustomCSS(self):
-        ROOT_DIR = os.path.dirname(os.path.realpath('static/custom_styleMMinte.css'))
-        with open(ROOT_DIR + '/custom_styleMMinte.css') as style:
+
+        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
             return style.read()+'''\n .left-panel{display: none;}.right-panel{width:100%;margin:px;background: white;padding: 0px}'''
     
     
@@ -257,8 +263,6 @@ class Index(server.App):
     </body>
     '''
 
-
-import cherrypy 
 
 if __name__ == '__main__':
     app = Index()

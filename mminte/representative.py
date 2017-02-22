@@ -1,13 +1,11 @@
-from os.path import join, abspath, dirname
+import pkg_resources
+from os.path import join
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
 from mackinac import get_modelseed_model_stats, reconstruct_modelseed_model, gapfill_modelseed_model, \
     create_cobra_model_from_modelseed_model
 from mackinac.SeedClient import ObjectNotFoundError
 from cobra.io import save_json_model
-
-mminte_folder = abspath(join(dirname(abspath(__file__)), '..'))
-data_folder = join(mminte_folder, 'data')
 
 
 def get_unique_otu_sequences(correlation_filename, sequence_filename, output_filename):
@@ -85,12 +83,12 @@ def search(sequence_filename, output_folder):
     output_file = join(output_folder, 'blast.txt')
     cmdline = NcbiblastnCommandline(cmd=blast_cmd,
                                     query=sequence_filename,
-                                    db=join(data_folder, 'db', '16Sdb'),
+                                    db=join(pkg_resources.resource_filename(__name__, 'data/db'), '16Sdb'),
                                     out=output_file,
                                     outfmt=6,
                                     max_target_seqs=1,
                                     num_threads=4)
-    cmdline()  # This can raise an ApplicationError
+    cmdline()  # Raises ApplicationError when there is a problem
 
     # Parse the blast output file with the results. In output format 6, the second
     # field is the ID of match in target database. In our case that is the PATRIC

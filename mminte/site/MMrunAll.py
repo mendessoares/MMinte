@@ -1,4 +1,5 @@
 import os
+from pkg_resources import resource_filename
 from widget1 import getUniqueOTU, getSeqs, workingOTUs
 from widget2 import blastSeqs, listTaxId4ModelSEED
 from widget3 import getModels
@@ -18,22 +19,18 @@ from spyre import server
 class custom_root(server.Root):
     @cherrypy.expose
     def widget7_out(self):
-		ROOT_DIR = os.path.dirname(os.path.realpath('index.html'))
-		full_path = ROOT_DIR + '/index.html'
-		with open(full_path) as data:
-			return data.read()
+        with open(resource_filename(__name__, 'index.html')) as data:
+            return data.read()
+
     @cherrypy.expose
     def d3(self):
-		ROOT_DIR = os.path.dirname(os.path.realpath('d3.v3.min.js'))
-		full_path = ROOT_DIR + '/d3.v3.min.js'
-		with open(full_path) as data:
-			return data.read()
+        with open(resource_filename(__name__, 'd3.v3.min.js')) as data:
+            return data.read()
+
     @cherrypy.expose
     def data4plot_json(self):
-		ROOT_DIR = os.path.dirname(os.path.realpath('data4plot_json'))
-		full_path = ROOT_DIR + '/data4plot_json'
-		with open(full_path) as data:
-			return data.read()
+        with open(resource_filename(__name__, 'data2plot_json')) as data:
+            return data.read()
 
 
 #cherrypy.config.update({"response.timeout":1000000,'log.access_file': '../fullRun/supportFiles/logs/logAccess_file.txt','log.error_file': '../fullRun/supportFiles/logs/logError_file.txt','log.screen':True})
@@ -76,8 +73,7 @@ class WidgetRunAll(server.App):
 
 
     def getCustomCSS(self):
-        ROOT_DIR = os.path.dirname(os.path.realpath('static/custom_styleMMinte.css'))
-        with open(ROOT_DIR + '/custom_styleMMinte.css') as style:
+        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
             return style.read()+'''\n .right-panel{width:65%;margin: 1em}'''
 
 

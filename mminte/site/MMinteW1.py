@@ -1,6 +1,10 @@
 
+__package__ = "mminte"
+
 from spyre import server
-from widget1 import getUniqueOTU, getSeqs, workingOTUs
+from mminte import get_unique_otu_sequences
+from pkg_resources import resource_filename
+#from widget1 import getUniqueOTU, getSeqs, workingOTUs
 import os
 
 
@@ -56,8 +60,7 @@ class Widget1(server.App):
     
     
     def getCustomCSS(self):
-        ROOT_DIR = os.path.dirname(os.path.realpath('static/custom_styleMMinte.css'))
-        with open(ROOT_DIR + '/custom_styleMMinte.css') as style:
+        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
             return style.read()+'''\n .right-panel{width:65%;margin: 1em}'''
     
 
@@ -84,29 +87,34 @@ class Widget1(server.App):
 
 
         try:
-            corrs = getUniqueOTU(corrsFile)
-            cherrypy.log("We successfully ran getUniqueOTU.")
+            get_unique_otu_sequences(corrsFile, sequencesFile, outputFasta)
         except:
-            cherrypy.log("We were unable to run getUniqueOTU.")
+            cherrypy.log('We were unable to run get_unique_otu_sequences')
             return "Sorry something's wrong. Make sure the path to your file is correct."
-            exit()
-        
-        try:
-            seqs = getSeqs(sequencesFile)
-            cherrypy.log("We successfully ran getSeqs.")
-        except:
-            cherrypy.log("We were unable to run getSeqs.")
-            return "Sorry something's wrong. Make sure the path to your file is correct."
-            exit()
-        
-        
-        try:
-            workingOTUs(corrs,seqs,outputFasta)
-            cherrypy.log("We successfully ran workingOTUs.")
-        except:
-            cherrypy.log("We were unable to run workingOTUs.")
-            return "Sorry something's wrong. Make sure the path to your file is correct."
-            exit()
+        # try:
+        #     corrs = getUniqueOTU(corrsFile)
+        #     cherrypy.log("We successfully ran getUniqueOTU.")
+        # except:
+        #     cherrypy.log("We were unable to run getUniqueOTU.")
+        #     return "Sorry something's wrong. Make sure the path to your file is correct."
+        #     exit()
+        #
+        # try:
+        #     seqs = getSeqs(sequencesFile)
+        #     cherrypy.log("We successfully ran getSeqs.")
+        # except:
+        #     cherrypy.log("We were unable to run getSeqs.")
+        #     return "Sorry something's wrong. Make sure the path to your file is correct."
+        #     exit()
+        #
+        #
+        # try:
+        #     workingOTUs(corrs,seqs,outputFasta)
+        #     cherrypy.log("We successfully ran workingOTUs.")
+        # except:
+        #     cherrypy.log("We were unable to run workingOTUs.")
+        #     return "Sorry something's wrong. Make sure the path to your file is correct."
+        #     exit()
 
         
         head = ["<strong><font color=#00961E size=4pt>Here are the OTU's that will be used in the rest of the analysis:</strong></font>"]

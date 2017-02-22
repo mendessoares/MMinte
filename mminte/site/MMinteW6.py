@@ -1,4 +1,5 @@
 from spyre import server
+from pkg_resources import resource_filename
 from widget6 import evaluateInteractions
 import os
 
@@ -48,8 +49,7 @@ class Widget6(server.App):
     tabs = ["Results"]
     
     def getCustomCSS(self):
-        ROOT_DIR = os.path.dirname(os.path.realpath('static/custom_styleMMinte.css'))
-        with open(ROOT_DIR + '/custom_styleMMinte.css') as style:
+        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
             return style.read()+'''\n .right-panel{width:65%;margin: 1em}'''
     
     def getHTML(self,params):

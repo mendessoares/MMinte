@@ -35,3 +35,6 @@ References
 
 The models provided in the mminte/test/data folder are from `Anoxic Conditions Promote
 Species-Specific Mutualism between Gut Microbes In Silico <http://dx.doi.org/doi:10.1128/AEM.00101-15>`_.
+
+The 16S sequences present in the database were provided by Maulik Shukla on
+the 3rd of November of 2015.
