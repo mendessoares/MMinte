@@ -6,9 +6,6 @@ from os.path import join
 from spyre import server
 import cherrypy
 
-import sys
-sys.path.extend(['/Users/m097749/Source/MMinte'])
-
 from mminte.site import Index
 from mminte.site import Widget1
 from mminte.site import Widget2
@@ -23,7 +20,7 @@ from mminte.site import WidgetRunAll
 if __name__ == '__main__':
     # Parse command line arguments.
     parser = argparse.ArgumentParser(prog='launchMMinte')
-    parser.add_argument('--port', help='port number of MMinte site', action='store', default=None)
+    parser.add_argument('--port', help='port number of MMinte site', action='store', type=int, default=8080)
     parser.add_argument('--log-folder', help='path to folder for storing log files', action='store',
                         dest='log_folder', default=gettempdir())
     args = parser.parse_args()
@@ -31,8 +28,8 @@ if __name__ == '__main__':
     # Set the cherrypy configuration.
     cherrypy.config.update({
         "response.timeout": 1000000,
-        'log.access_file': join(args.log_folder, 'logAccess_file.txt'),
-        'log.error_file': join(args.log_folder, 'logError_file.txt'),
+        'log.access_file': join(args.log_folder, 'access_file.txt'),
+        'log.error_file': join(args.log_folder, 'error_file.txt'),
         'log.screen': True
     })
 
@@ -60,4 +57,4 @@ if __name__ == '__main__':
         parent, route = site.get_route(fullRoute)
 
     # Launch the website (which runs until explicitly ended).
-    site.launch()
+    site.launch(port=args.port)
