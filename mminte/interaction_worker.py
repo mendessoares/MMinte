@@ -49,49 +49,63 @@ def compute_growth_rates(pair_filename, media_filename):
 
     # Load the model and apply the media to it.
     pair_model = load_model_from_file(pair_filename)
-    apply_media(pair_model, media_filename)
+    apply_medium(pair_model, media_filename)
 
     # Optimize the model with two species together, one species knocked out, and
     # other species knocked out.
-    t_solution = pair_model.optimize()
     a_id = pair_model.notes['species'][0]['id']
+    a_objective = pair_model.notes['species'][0]['objective']
     b_id = pair_model.notes['species'][1]['id']
+    b_objective = pair_model.notes['species'][1]['objective']
+
+    t_solution = pair_model.optimize()
     a_solution = single_species_knockout(pair_model, b_id)
     b_solution = single_species_knockout(pair_model, a_id)
 
     # Evaluate the interaction between the two species.
-    a_objective = pair_model.notes['species'][0]['objective']
-    b_objective = pair_model.notes['species'][1]['objective']
-    a_percent_change, b_percent_change, interaction_type = \
-        evaluate_interaction(t_solution.x_dict[a_objective], t_solution.x_dict[b_objective],
-                             a_solution.x_dict[a_objective], b_solution.x_dict[b_objective])
-    return Series([a_id, b_id, interaction_type, t_solution.f, t_solution.x_dict[a_objective],
-                   t_solution.x_dict[b_objective], a_solution.x_dict[a_objective],
-                   b_solution.x_dict[b_objective], a_percent_change, b_percent_change],
-                   index=growth_rate_columns)
+    if t_solution.status == 'optimal' and a_solution.status == 'optimal' and b_solution.status == 'optimal':
+        a_percent_change, b_percent_change, interaction_type = \
+            evaluate_interaction(t_solution.x_dict[a_objective], t_solution.x_dict[b_objective],
+                                 a_solution.x_dict[a_objective], b_solution.x_dict[b_objective])
+        details = Series([a_id, b_id, interaction_type, t_solution.f, t_solution.x_dict[a_objective],
+                         t_solution.x_dict[b_objective], a_solution.x_dict[a_objective],
+                         b_solution.x_dict[b_objective], a_percent_change, b_percent_change],
+                         index=growth_rate_columns)
+    else:
+        details = Series([a_id, b_id, 'None', 0., 0., 0., 0., 0., 0., 0.], index=growth_rate_columns)
+        if t_solution.status == 'optimal':
+            details.set_value('TOGETHER', t_solution.f)
+            details.set_value('A_TOGETHER', t_solution.x_dict[a_objective])
+            details.set_value('B_TOGETHER', t_solution.x_dict[b_objective])
+        if a_solution.status == 'optimal':
+            details.set_value('A_ALONE', a_solution.x_dict[a_objective])
+        if b_solution.status == 'optimal':
+            details.set_value('B_ALONE', b_solution.x_dict[b_objective])
+
+    return details
 
 
-def apply_media(model, media_filename):
-    """ Apply a media to a model to set the metabolites that can be consumed.
+def apply_medium(model, medium_filename):
+    """ Apply a medium to a model to set the metabolites that can be consumed.
 
     Parameters
     ----------
     model : cobra.Model
-        Model to apply media to
-    media_filename : str
-        Path to file with exchange reaction bounds for media
+        Model to apply medium to
+    medium_filename : str
+        Path to file with exchange reaction bound for medium
     """
 
-    # Load the media from the file.
-    media = json.load(open(media_filename))
+    # Load the medium from the file.
+    medium = json.load(open(medium_filename))
 
-    # Get the list of exchange reactions. Only allow exchange reactions in the media.
+    # Get the list of exchange reactions. Only allow exchange reactions in the medium.
     exchange_reactions = model.reactions.query(lambda x: x.startswith('EX_'))
 
-    # Update the bounds for exchange reactions based on the values in the media.
+    # Update the bounds for exchange reactions based on the values in the medium.
     for reaction in exchange_reactions:
-        if reaction.id in media:
-            reaction.bounds = media[reaction.id]
+        if reaction.id in medium:
+            reaction.lower_bound = medium[reaction.id]
         else:
             reaction.lower_bound = 0.
 
