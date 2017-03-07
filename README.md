@@ -1,3 +1,20 @@
+# Announcement 03/07/2017
+## An updated version of MMinte will be coming soon.
+The features include:
+
+-Download through pypi.
+
+-Easy installation across systems.
+
+-MUUUUUUUUUCH faster!
+
+-Jupyter notebooks allowing you to easily explore your data from the command line.
+
+Come back soon.
+
+H.
+
+
 # Announcement 01/06/2017
 ## We're back on! - H.
 
