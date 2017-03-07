@@ -32,6 +32,7 @@ def create_interaction_models(source_models, output_folder='data', n_processes=N
     result_list = [pool.apply_async(create_pair_model, (pair, output_folder))
                    for pair in combinations(source_models, 2)]
     output_models = [result.get() for result in result_list]
+    pool.close()
     return output_models
 
 
@@ -71,4 +72,5 @@ def calculate_growth_rates(pair_models, media_filename, n_processes=None):
     growth_rates = DataFrame(columns=growth_rate_columns)
     for result in result_list:
         growth_rates = growth_rates.append(result.get(), ignore_index=True)
+    pool.close()
     return growth_rates
