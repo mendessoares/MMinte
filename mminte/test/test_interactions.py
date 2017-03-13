@@ -10,7 +10,7 @@ class TestInteractions:
 
     def test_growth_rates(self, data_folder):
         model_files = ['BT.sbml', 'FP.sbml']
-        source_models = [join(data_folder, x) for x in model_files]
+        source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
         pair_models = mminte.create_interaction_models(source_models, output_folder=gettempdir())
         assert len(pair_models) == 1
         assert pair_models[0] == '{0}/BTxFP.json'.format(gettempdir()) or pair_models[0] == '{0}/FPxBT.json'.format(gettempdir())
@@ -32,16 +32,16 @@ class TestInteractions:
 
     def test_not_enough_source(self, data_folder):
         with pytest.raises(ValueError):
-            mminte.create_interaction_models([join(data_folder, 'BT.sbml')])
+            mminte.create_interaction_models([(join(data_folder, 'BT.sbml'))])
 
     def test_bad_source_file(self, data_folder):
         model_files = ['BT.sbml', 'BAD.sbml']
-        source_models = [join(data_folder, x) for x in model_files]
+        source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
         with pytest.raises(IOError):
             mminte.create_interaction_models(source_models, output_folder=gettempdir())
 
     def test_bad_extension(self, data_folder):
         model_files = ['BT.sbml', 'FP.bad']
-        source_models = [join(data_folder, x) for x in model_files]
+        source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
         with pytest.raises(IOError):
             mminte.create_interaction_models(source_models, output_folder=gettempdir())
