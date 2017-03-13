@@ -41,8 +41,7 @@ if __name__ == '__main__':
     site.addApp(Widget4, '/app4')
     site.addApp(Widget5, '/app5')
     site.addApp(Widget6, '/app6')
-    site.addApp(Widget7, '/app7')
-    site.addApp(WidgetRunAll, '/app8')
+    site.addApp(WidgetRunAll, '/appall')
     site.root.templateVars['app_bar'] = [
         ('/', 'Intro'),
         ('/app1', 'Widget1'),
@@ -51,8 +50,7 @@ if __name__ == '__main__':
         ('/app4', 'Widget4'),
         ('/app5', 'Widget5'),
         ('/app6', 'Widget6'),
-        ('/app7', 'Widget7'),
-        ('/app8', 'WidgetRunAll')]
+        ('/appall', 'WidgetRunAll')]
     for fullRoute, _ in site.site_app_bar[1:]:
         parent, route = site.get_route(fullRoute)
 

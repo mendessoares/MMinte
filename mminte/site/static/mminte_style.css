@@ -1,0 +1,504 @@
+/*
+*
+* MMinte Spyre CSS
+*
+*/
+
+
+/*
+* Base classes
+*/
+
+body {
+	margin: 10px;
+}
+
+h1 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 24px;
+	color: #333333;
+	margin: 5px 0 20px;
+	padding: 0 0 4px 0;
+	text-transform: uppercase;
+	border-bottom: 5px solid #333;
+}
+
+input {
+	display: block;
+	padding: 5px;
+	margin: 5px 0 0;
+	font-size: 14px;
+	font-family: Arial, Helvetica, sans-serif;
+	width: 100%;
+	box-sizing: border-box;  /* Ensures that the input will not extend past the input panel */
+}
+
+input[type="radio"] {
+	display: inline-block;
+	padding: 5px;
+	margin: 5px 0 10px 5px;
+	width: 10%;
+}
+
+input[type="checkbox"] {
+	display: inline-block;
+	padding: 5px;
+	margin: 5px 0 0;
+	width: 10%;
+}
+
+select[multiple] {
+    height: auto;
+    display: inline-block;
+	padding: 5px;
+	margin: 5px 0 2px 2px;
+	width: 95%;
+}
+
+
+/* Upload file input and buttons */
+input[type=submit] {
+    display: block;
+	font-size: 14px;
+	padding: 8px 5px 8px 5px;
+	margin: 0 auto;
+	text-align: center;
+	color: #ffffff;
+	background-color: #777777;
+  	width: 80%;
+  	border: 1px solid;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.inputfile {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+.inputfile + label {
+    display: block;
+	font-size: 14px;
+	padding: 8px 5px 8px 5px;
+	margin: 0 auto;
+	text-align: center;
+	color: #ffffff;
+	background-color: #777777;
+  	width: 80%;
+  	border: 1px solid;
+	border-radius: 8px;
+}
+
+.no-js .inputfile + label {
+    display: none;
+}
+
+.inputfile:focus + label,
+.inputfile.has-focus + label {
+    outline: 1px dotted #000;
+    outline: -webkit-focus-ring-color auto 5px;
+}
+
+.inputfile + label svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    fill: currentColor;
+    margin-top: -0.25em;
+    margin-right: 0.25em;
+}
+
+.inputfile + label {
+	cursor: pointer; /* "hand" cursor */
+}
+
+.inputfile-1:focus + label,
+.inputfile-1.has-focus + label,
+.inputfile-1 + label:hover {
+    background-color: #989898;
+}
+
+/* END ^^upload file input and buttons^^ */
+
+select {
+	font-size: 14px;
+	display: block;
+	font-family: Arial, Helvetica, sans-serif;
+	background: #f4f4f4;
+	width: 100%;
+	height: 30px;
+}
+
+ul {
+	margin: 0px;
+}
+
+li.active a, li.active a:hover {
+	background: #fdfdfd;
+	color: #000000;
+}
+
+/*
+* Container
+*/
+
+.container {
+	box-sizing: border-box;
+	display: block;
+}
+
+.container:before {
+	content: "";
+	display: table;
+}
+
+.container:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+/*
+* Paddings
+* XS: 5px;
+* S: 10px;
+* M: 20px;
+*/
+
+
+.spyrePad--topS {
+	padding-top: 10px;
+	box-sizing: border-box;
+}
+
+.spyrePad--bottomS {
+	padding-bottom: 10px;
+	box-sizing: border-box;
+}
+
+.spyrePad--leftS {
+	padding-left: 10px;
+	box-sizing: border-box;
+}
+
+.spyrePad--rightS {
+	padding-right: 10px;
+	box-sizing: border-box;
+}
+
+.spyrePad--vertS {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	box-sizing: border-box;
+}
+
+.spyrePad--vertXS {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	box-sizing: border-box;
+}
+
+.spyrePad--topM {
+	padding-top: 20px;
+	box-sizing: border-box;
+}
+
+.spyrePad--bottomM {
+	padding-bottom: 20px;
+	box-sizing: border-box;
+}
+
+.spyrePad--leftM {
+	padding-left: 20px;
+	box-sizing: border-box;
+}
+
+.spyrePad--rightM {
+	padding-right: 20px;
+	box-sizing: border-box;
+}
+
+.spyrePad--vertM {
+	padding-top: 20px;
+	padding-bottom: 20px;
+	box-sizing: border-box;
+}
+
+/*
+* Slider
+*/
+
+.slider_value {
+	text-align: center;
+	font-size: 12px;
+	float: left;
+	width: 20%;
+}
+
+.slider_slider[type="range"] {
+	width: 80%;
+	float: left;
+}
+
+/*
+* <img>
+*/
+
+img {
+	max-width: 100%;
+}
+
+
+/*
+* Button
+*/
+
+.button {
+	display: block;
+	font-size: 18px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: 600;
+	padding: 8px 5px 8px 5px;
+	margin: 0 auto;
+	text-align: center;
+	color: #000000;
+	background-color: #00961e;
+  	width: 80%;
+  	border: 0px solid;
+	border-radius: 8px;
+}
+
+.button:hover {
+	background-color: #66c078;
+	cursor: pointer;
+}
+
+/*
+* Panels
+*/
+
+.menu {
+	position: fixed;
+	-webkit-transform: translateZ(0);
+	transform: translateZ(0px);
+	font-size: 14px;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #333333;
+	background: #f4f4f4;
+	padding: 10px;
+	width: 280px;
+	box-sizing: border-box;
+	overflow: auto;
+	height: 80%;
+}
+
+.content {
+	padding: 0;
+	box-sizing: border-box;
+	margin-left: 280px;
+	max-width: 100%;
+	font-size: 14px;
+	font-family: Arial, Helvetica, sans-serif;
+}​
+
+/*
+* Bars
+*/
+
+.bar {
+  fill: orange;
+}
+
+.bar:hover {
+  fill: orangered ;
+}
+
+.x.axis path {
+  display: none;
+}
+
+/*
+* Table
+*/
+
+table.sortable {
+	font-family: Arial, Helvetica, sans-serif;;
+	font-size: 12px;
+	background: #fff;
+	min-width: 420px;
+	max-width: 100%;
+	border-collapse: collapse;
+	text-align: left;
+}
+
+table.sortable thead {
+	font-size: 14px;
+	font-weight: normal;
+	color: #039;
+	padding: 10px 8px;
+	border-bottom: 2px solid #6678b1;
+}
+table.sortable td {
+	border-bottom: 1px solid #ccc;
+	color: #669;
+	padding: 6px 8px;
+}
+
+table.sortable th {
+	border-bottom: 1px solid #ccc;
+	color: #669;
+	padding: 6px 8px;
+}
+
+table.sortable tbody tr:hover td {
+	color: #009;
+}
+
+
+/*
+* Tabs
+*/
+
+.apptabs {
+	width: 100%;
+	display: inline-block;
+}
+
+.apptab-links:after {
+	display: block;
+	clear: both;
+	content: '';
+}
+
+.apptab-links li {
+	margin: 5px 5px;
+	float: left;
+	list-style: none;
+}
+
+.apptab-links a {
+    width: 90px;
+    height: 30px;
+	background: #00961e;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: 600;
+	text-align: center;
+	color: #000000;
+	border: 0px solid;
+	border-radius: 10px;
+	padding-top:1em;
+	text-decoration: none;
+}
+
+/*
+	padding: 6px 6px;
+	display: inline-block;
+	border-radius: 3px 3px 3px 3px;
+	transition: all linear 0.15s;
+*/
+
+.apptab-links a:hover {
+	background: #66c078;
+	text-decoration: none;
+}
+
+/*----- Content of Tabs -----*/
+.apptab-content {
+	padding: 10px;
+	background: #fdfdfd;
+}
+
+.apptab {
+	display: none;
+}
+
+.apptab.active {
+	display: block;
+}
+
+
+
+
+/*----- Tabs -----*/
+.tabs {
+	width:100%;
+	display:inline-block;
+}
+
+/*----- Tab Links -----*/
+/* Clearfix */
+.tab-links:after {
+	display:block;
+	clear:both;
+	content:'';
+}
+
+.tab-links li {
+	margin: 0px 5px;
+	float: left;
+	list-style: none;
+}
+
+.tab-links a {
+	padding: 9px 15px;
+	display: inline-block;
+	border-radius: 3px 3px 0px 0px;
+	background: #00961e;
+	font-size: 18px;
+	font-family: Arial, Helvetica, sans-serif;
+	text-align: center;
+	font-weight: 600;
+	color: #000000;
+	text-decoration: none;
+}
+
+.tab-links a:hover {
+	background: #66c078;
+	color: #FFF;
+	text-decoration: none;
+}
+
+.tab-links.active a,
+.tab-links.active a:hover {
+	background: #fdfdfd;
+	color: #000000;
+}
+
+/*----- Content of Tabs -----*/
+.tab-content {
+	padding:15px;
+	background:#fdfdfd;
+}
+
+.tab {
+	display:none;
+}
+
+.tab.active {
+	display:block;
+}
+
+
+
+
+/*
+* Responsive
+*/
+
+@media (max-width: 760px) {
+	.menu,
+	.content {
+		position: relative;
+		width: 100%;
+	}
+
+	.content {
+		margin: 0;
+		padding-top: 30px;
+	}
+}

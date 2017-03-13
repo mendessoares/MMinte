@@ -1,139 +1,98 @@
-
-__package__ = "mminte"
-
 from spyre import server
-from mminte import get_unique_otu_sequences
 from pkg_resources import resource_filename
-#from widget1 import getUniqueOTU, getSeqs, workingOTUs
-import os
-
-
+from os.path import exists, dirname
+from os import makedirs
 import cherrypy
-#cherrypy.config.update({"response.timeout":1000000,'log.access_file': '../supportFiles/logs/logAccess_file.txt', 'log.error_file': '../supportFiles/logs/logError_file.txt','log.screen': True})
+
+from mminte import get_unique_otu_sequences
+from .mminte_widget import css_filename
+
 
 class Widget1(server.App):
     title = 'Widget 1'
 
-
-    inputs = [{"type": "text",
-        "key": "text1",
-        "label": "<font size=4pt>In this widget we're just going to create a file with the sequences of the OTUs that will be required for the rest of the analysis.</font> <br> <br>Do you want to just run the widget with the default example files?",
-        "value": "Yes or No"},
+    inputs = [
+        {"type": "text",
+         "key": "correlation_file",
+         "label": "In this widget we're going to create a file with the sequences of the OTUs "
+                  "that will be required for the rest of the analysis.<br><br>Enter the location of "
+                  "the file with the information about the correlations between associated OTUs",
+         "value": "/home/me/my_analysis/correlations.txt"},
 
         {"type": "text",
-         "key": "text2",
-         "label": "<br><font size=3pt>If you want to run Widget 1 on you own files, tell me which file has the information about associated OTUs</font>",
-         "value": "Enter the path to your file"},
+         "key": "representative_otu_file",
+         "label": "Enter the location of the file with the sequences of the representative OTUs",
+         "value": "/home/me/my_analysis/otus.fasta"},
 
         {"type": "text",
-         "key": "text3",
-         "label": "<font size=3pt>Tell me which file has the sequences of the representative OTUs</font>",
-         "value": "Enter the path to your file"},
-
-        {"type": "text",
-         "key": "text4",
-         "label": "<font size=3pt>Tell me which folder you would like to put the results from your analysis in</font>",
-         "value": "Enter the path to your results folder"},
-
-        {"type": "text",
-         "key": "text5",
-         "label": "<font size=3pt>Tell me what do you want the results file to be called</font>",
-         "value": "Enter the name of your file"}
-
+         "key": "unique_otu_file",
+         "label": "Enter the location of the file where the sequences of the unique OTUs will be stored",
+         "value": "/home/me/my_analysis/unique_otus.fasta"},
     ]
 
+    controls = [
+        {"type": "button",
+         "label": "Run Widget 1",
+         "id": "run_widget"},
+    ]
 
-
-
-    outputs = [{"type":"html",
-                "id":"some_html",
-                "control_id":"run_widget",
-                "tab":"Results",
-                "on_page_load": False}]
-
-    controls = [{"type":"button",
-                 "label":"Run Widget 1",
-                 "id":"run_widget"}]
+    outputs = [
+        {"type": "html",
+         "id": "results",
+         "control_id": "run_widget",
+         "tab": "Results",
+         "on_page_load": False},
+    ]
 
     tabs = ["Results"]
-
-    
     
     def getCustomCSS(self):
-        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
-            return style.read()+'''\n .right-panel{width:65%;margin: 1em}'''
-    
+        with open(resource_filename(__name__, css_filename)) as style:
+            return style.read()
 
+    def getHTML(self, params):
+        """ Run Widget 1 and generate HTML output for Results tab. """
 
+        cherrypy.log('Widget 1 input parameters: {0}'.format(params))
 
-    def getHTML(self,params):
-
-        if params['text1'] == "Yes" or params['text1'] == "yes":
-            corrsFile = '../supportFiles/exampleRun/userFiles/corrs.txt'
-            sequencesFile = '../supportFiles/exampleRun/userFiles/otus.fasta'
-            outFolder = '../supportFiles/exampleRun/userOutput/'
-            outFastaFile = 'reprOTUsToUse.fasta'
-            outputFasta = outFolder + outFastaFile
-
-        else:
-            corrsFile = params['text2']
-            sequencesFile = params['text3']
-            outFolder = params['text4']
-            outFastaFile = params['text5']
-            outputFasta = outFolder + outFastaFile
-
-        if not os.path.exists(outFolder):
-            os.makedirs(outFolder)
-
+        if not exists(params['correlation_file']):
+            cherrypy.log('Widget 1: correlation file "{0}" was not found'.format(params['correlation_file']))
+            return 'Sorry, correlation file "{0}" was not found. Make sure the path to the file is correct.' \
+                   .format(params['correlation_file'])
+        if not exists(params['representative_otu_file']):
+            cherrypy.log('Widget 1: representative OTU file "{0}" was not found'
+                         .format(params['representative_otu_file']))
+            return 'Sorry, representative OTU file "{0}" was not found. Make sure the path to the file is correct.' \
+                   .format(params['representative_otu_file'])
+        output_folder = dirname(params['unique_otu_file'])
+        try:
+            if not exists(output_folder):
+                makedirs(output_folder)
+        except Exception as e:
+            cherrypy.log('Widget 1: Error creating folder "{0}" for unique OTUs file: {1}'.format(output_folder, e))
+            return 'Sorry something went wrong creating the folder "{0}" for the unique OTUs file. Make sure ' \
+                   'the path to the file is correct.<br>Exception: {1}'.format(output_folder, e)
 
         try:
-            get_unique_otu_sequences(corrsFile, sequencesFile, outputFasta)
-        except:
-            cherrypy.log('We were unable to run get_unique_otu_sequences')
-            return "Sorry something's wrong. Make sure the path to your file is correct."
-        # try:
-        #     corrs = getUniqueOTU(corrsFile)
-        #     cherrypy.log("We successfully ran getUniqueOTU.")
-        # except:
-        #     cherrypy.log("We were unable to run getUniqueOTU.")
-        #     return "Sorry something's wrong. Make sure the path to your file is correct."
-        #     exit()
-        #
-        # try:
-        #     seqs = getSeqs(sequencesFile)
-        #     cherrypy.log("We successfully ran getSeqs.")
-        # except:
-        #     cherrypy.log("We were unable to run getSeqs.")
-        #     return "Sorry something's wrong. Make sure the path to your file is correct."
-        #     exit()
-        #
-        #
-        # try:
-        #     workingOTUs(corrs,seqs,outputFasta)
-        #     cherrypy.log("We successfully ran workingOTUs.")
-        # except:
-        #     cherrypy.log("We were unable to run workingOTUs.")
-        #     return "Sorry something's wrong. Make sure the path to your file is correct."
-        #     exit()
+            cherrypy.log('Widget 1: Started getting unique OTU sequences')
+            get_unique_otu_sequences(params['correlation_file'], params['representative_otu_file'],
+                                     params['unique_otu_file'])
+            cherrypy.log("Widget 1: Finished getting unique OTU sequences")
+        except Exception as e:
+            cherrypy.log('Widget 1: Error getting unique OTU sequences: {0}'.format(e))
+            return "Sorry something went wrong. Make sure the paths to your files are correct.<br>" \
+                   "Exception: {0}.".format(e)
 
-        
-        head = ["<strong><font color=#00961E size=4pt>Here are the OTU's that will be used in the rest of the analysis:</strong></font>"]
-        head.append('<br>')
-        head.append("<strong><font color=#00961E size=2pt>You can find the full sequences in the userOutput folder.</strong></font>")
-        head.append('<br>')
-        
-        myfile = open(outputFasta)
+        head = ['Here are the OTUs that will be used in the rest of the analysis. You can find '
+                'the full sequences in the "{0}" file.<br>'.format(params['unique_otu_file'])]
 
-        for i in myfile:
-            if i.startswith('>'):
-                head.append('<br>')
-                head.append(i)
-                
-       
+        with open(params['unique_otu_file']) as handle:
+            for line in handle:
+                if line.startswith('>'):
+                    head.append('<br>{0}'.format(line))
+
         return head
 
-
-        
 if __name__ == '__main__':
     app = Widget1()
     app.launch()

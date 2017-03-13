@@ -33,9 +33,6 @@ class custom_root(server.Root):
             return data.read()
 
 
-#cherrypy.config.update({"response.timeout":1000000,'log.access_file': '../fullRun/supportFiles/logs/logAccess_file.txt','log.error_file': '../fullRun/supportFiles/logs/logError_file.txt','log.screen':True})
-
-
 server.Root=custom_root
 
 class WidgetRunAll(server.App):

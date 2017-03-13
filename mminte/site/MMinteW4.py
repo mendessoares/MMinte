@@ -1,115 +1,176 @@
 from spyre import server
 from pkg_resources import resource_filename
-from widget4 import totalEXRxns,createEXmodel,createReverseEXmodel, addEXMets2SpeciesEX, replaceRxns,replaceMets,createCommunityModel,allPairComModels,createAllPairs,createSubsetPairs
-import os, os.path
-
+from os import makedirs
+from os.path import join, exists
 import cherrypy
-#cherrypy.config.update({"response.timeout":1000000,'log.access_file': '../supportFiles/logs/logAccess_file.txt','log.error_file': '../supportFiles/logs/logError_file.txt','log.screen':True})
+
+from mminte import create_interaction_models, get_all_pairs
+from .mminte_widget import css_filename
+
 
 class Widget4(server.App):
     title = 'Widget 4'
     
     inputs = [
-        {"type": "text",
-         "label": "<font size=4pt>In this widget we are going  we're just going to create 2-species community metabolic models based on a file that lists the pairs of species that should go together. These are either the ones listed in file with correlations between pairs of species, or, if you don't provide a file with correlations between pairs of species, all possible unique combinations between the bacteria in your list of species.</font> <br> <br>Do you want to just run the widget with the default example files?",
-        "key": 'text14',
-        "value": "Yes or No"},
-
-        { "type":"text",
-        "key":"text15",
-        "label" : "<font size=3pt> Tell me what the path to the file that has a list of species to pair. If you don't have this and just want to create all possible 2-species communities with the models in your models folder, just type: NA.  </font>",
-        "value":"Enter path to file listing the species pairs"},
-
-        { "type":"text",
-        "key":"text28",
-        "label" : "<font size=3pt> We can also create a list of pairs based on level of correlation between the OTUs in the analysis and the similarity between these OTUs and the genomeID they were associated with in widget 2. Tell me which file has the information about the <b>correlations</b> between pairs of <b>OTUs</b>. Again, if you just want to create all possible 2-species communities with the models in your models folder, just type: NA. </font>",
-        "value":"Enter the path to the correlations file here"},
-
-        { "type":"text",
-        "key":"text29",
-        "label" : "<font size=3pt> Tell me which file has the information about the percent similarity between the OTUs analyzed and the genome they were matched with (one of the outputs of Widget 2). Again, if you just want to create all possible 2-species communities with the models in your models folder, just type: NA.</font>",
-        "value":"Enter the path to the percent similarity file here"},
-
-
-        { "type":"text",
-        "key":"text16",
-        "label" : "<font size=3pt> Please tell me the path to the folder containing the metabolic models you want to use. </font>",
-        "value":"Enter path to your model folder"},
+        {"type": "dropdown",
+         "key": 'pair_input_type',
+         "label": "In this widget we are going  we're going to create two-species community metabolic models "
+                  "from single species metabolic models. You can specify the species pairs using (1) a file "
+                  "with a list of single species model file names to select all possible pairs, (2) a file "
+                  "with a list of pairs of single species file names to select specific pairs, or (3) the "
+                  "correlations file from Widget 1 and the similarity file from Widget 2 to select a subset "
+                  "of pairs. How do you want to specify the single species model file names of the pairs?",
+         "options": [{"label": "All pairs", "value": "all"},
+                     {"label": "Specific pairs", "value": "specific"},
+                     {"label": "Subset pairs", "value": "subset"}],
+         "value": 'All pairs'},
 
         {"type": "text",
-         "key": 'text17',
-         "label": "<font size=3pt>Tell me which folder you would like to put models of the 2-species communities</font>",
-         "value": "Enter the path to your communities folder"},
-        ]
-    
-    outputs = [{"type":"html",
-                "id":"some_html",
-                "control_id":"run_widget",
-                "tab":"Results",
-                "on_page_load": False}]
-    
-    controls = [{"type":"button",
-                 "label":"Run Widget 4",
-                 "id":"run_widget"}]
+         "key": "model_list_file",
+         "label": 'If you selected "All pairs", enter the location of the file with the list of single species models',
+         "value": "/home/me/my_analysis/models/single_model_filenames.txt"},
+
+        {"type": "text",
+         "key": "pair_list_file",
+         "label": 'If you seelcted "Specific pairs", enter the location of the file with the list of pairs of '
+                  'single species models',
+         "value": "/home/me/my_analysis/models/pair_model_filenames.txt"},
+
+        {"type": "text",
+         "key": "correlation_file",
+         "label": 'If you selected "Subset pairs", enter the location of the file with the information about the '
+                  'correlations between associated OTUs',
+         "value": "/home/me/my_analysis/correlations.txt"},
+
+        {"type": "text",
+         "key": "similarity_file",
+         "label": 'If you selected "Subset pairs", enter the location of the file with percent similarity information',
+         "value": "/home/me/my_analysis/similarity.txt"},
+
+        {"type": "text",
+         "key": 'community_folder',
+         "label": "Enter the location of the folder where two-species community models will be stored",
+         "value": "/home/me/my_analysis/community"},
+    ]
+
+    controls = [
+        {"type": "button",
+         "label": "Run Widget 4",
+         "id": "run_widget"}
+    ]
+
+    outputs = [
+        {"type": "html",
+         "id": "results",
+         "control_id": "run_widget",
+         "tab": "Results",
+         "on_page_load": False}
+    ]
     
     tabs = ["Results"]
     
     def getCustomCSS(self):
-        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
-            return style.read()+'''\n .right-panel{width:65%;margin: 1em}'''
-        
-        
-    def getHTML(self,params):
+        with open(resource_filename(__name__, css_filename)) as style:
+            return style.read()
 
-        if params['text14'] == 'Yes' or params['text1'] == "yes":
-            #list @todo fix this!!! Hacked!
-            corrsFile = '../supportFiles/exampleRun/userFiles/corrs.txt'
-            similFile = '../supportFiles/exampleRun/userOutput/similFile.txt'
-            modelFolder = '../supportFiles/exampleRun/userOutput/models/'
-            comFolder = '../supportFiles/exampleRun/userOutput/communityModels/'
-            createSubsetPairs(similFile,corrsFile)
-            list = '../tempFiles/pairsList.txt'
+    def getHTML(self, params):
+        """ Run Widget 4 and generate HTML output for Results tab. """
 
+        cherrypy.log('Widget 4 input parameters: {0}'.format(params))
+
+        if params['pair_input_type'] == 'all':
+            if not exists(params['model_list_file']):
+                cherrypy.log('Widget 4: Model list file "{0}" was not found'.format(params['model_list_file']))
+                return 'Sorry, model list file "{0}" was not found. Make sure the path to the file is correct.' \
+                       .format(params['model_list_file'])
+            with open(params['model_list_file'], 'r') as handle:
+                source_models = [line.strip() for line in handle]
+            pairs = get_all_pairs(source_models)
+            cherrypy.log('Widget 4: Generated {0} pairs from {1} source models'.format(len(pairs), len(source_models)))
+        elif params['pair_input_type'] == 'specific':
+            if not exists(params['pair_list_file']):
+                cherrypy.log('Widget 4: Pair list file "{0}" was not found'.format(params['pair_list_file']))
+                return 'Sorry, pair list file "{0}" was not found. Make sure the path to the file is correct.' \
+                       .format(params['pair_list_file'])
+            with open(params['pair_list_file'], 'r') as handle:
+                pair_list = [line.strip().split('\t') for line in handle]
+            for index in range(len(pair_list)):
+                fields = pair_list[index]
+                if len(fields) != 2:
+                    return 'Line {0} in "{1}" file must have two columns separated by tab' \
+                           .format(index, params['pair_list_file'])
+            pairs = [(fields[0], fields[1]) for fields in pair_list]
+            cherrypy.log('Widget 4: Found {0} pairs in pair list file'.format(len(pairs)))
         else:
-            list = params['text15'] #todo, create this on the fly from the list of speciesIDs
-            corrsFile = params['text28']
-            similFile = params['text29']
-            modelFolder = params['text16']
-            comFolder = params['text17']
+            # Need to move over code from subset pairs. Still not convinced that it is different than going
+            # through the standard workflow.
+            source_models = []
+            with open(params['similarity_file'], 'r') as handle:
+                similarity = [line.strip().split() for line in handle]
+            with open(params['correlation_file'], 'r') as handle:
+                correlation = [line.strip().split() for line in handle]
 
-        ############## In case there is no list to start with! #############
+            tempTableA = []
+            for i in correlation:
+                for j in similarity:
+                    if i[0] == j[1]:
+                        new_line = i[0], i[1], j[2]
+                        tempTableA.append(list(new_line))
 
-        if list == 'NA' and similFile == 'NA' and corrsFile == 'NA':
-            createAllPairs(modelFolder)
-            list = '../tempFiles/pairsList.txt'
-        elif list == 'NA' and similFile != 'NA' and corrsFile != 'NA':
-            createSubsetPairs(similFile,corrsFile)
-            list = '../tempFiles/pairsList.txt'
+            cherrypy.log('Finished creating the first temporary table.')
 
-        ############## Ok, now there is a list #############################
+            tempTableB = []
 
+            for i in tempTableA:
+                for j in similarity:
+                    if i[1] == j[1]:
+                        new_line = i[2] + 'X' + j[2]
+                        tempTableB.append(new_line)
 
+            cherrypy.log('Finished creating the second temporary table.')
 
+            tempTableC = list(set(tempTableB))
 
+            cherrypy.log(
+                'There are %d unique combinations of two species that will be used to create the community models.' % (
+                len(tempTableC)))
 
-
-        if not os.path.exists(comFolder):
-            os.makedirs(comFolder)
+            # pairsListFile = open('../tempFiles/pairsList.txt', 'w')
+            #
+            # print>> pairsListFile, 'speciesA', 'speciesB'
+            #
+            # for item in tempTableC:
+            #     line = item.split('X')
+            #     print>> pairsListFile, line[0], line[1]
+            #
+            # pairsListFile.close()
 
         try:
-            allPairComModels(list,modelFolder,comFolder)
-            cherrypy.log("We're finished creating your community models")
-        except:
-            cherrypy.log("We were unable to run allPairComModels.")
-            return "Sorry something's wrong. Make sure the path to your file is correct and that the python module cobrapy is loaded into your system."
-            exit()
-        
-        
-        numModels = sum(os.path.isfile(os.path.join(comFolder, f)) for f in os.listdir(comFolder)) - 1
-        
-        
-        
-        return "We created %d community models. In the next widget, we will use them  to predict the growth rate of their species in isolation and when in the community using COBRA tools. You can find all the models in the %s." %(numModels,comFolder)
+            if not exists(params['community_folder']):
+                makedirs(params['community_folder'])
+        except Exception as e:
+            cherrypy.log('Widget 4: We were unable to create folder "{0}" for community model files'
+                         .format(params['community_folder']))
+            return 'Sorry something went wrong creating the folder "{0}" for the community model files. Make sure ' \
+                   'the path to the folder is correct.<br>Exception: {1}'.format(params['community_folder'], e)
+
+        try:
+            cherrypy.log('Widget 4: Started created community models from {0} pairs of single species models'
+                         .format(len(pairs)))
+            model_filenames = create_interaction_models(pairs, output_folder=params['community_folder'])
+            cherrypy.log("Widget 4: Finished creating {0} community models".format(len(model_filenames)))
+            output_filename = join(params['community_folder'], 'pair_model_filenames.txt')
+            with open(output_filename, 'w') as handle:
+                handle.write('\n'.join(model_filenames))
+        except Exception as e:
+            cherrypy.log("Widget 4: Error creating community models: {0}".format(e))
+            return "Sorry something's wrong. Make sure the path to your file is correct and " \
+                   "that the Python package cobrapy is loaded into your system.<br>Exception: {0}".format(e)
+
+        return 'We created {0} community models. In the next widget, we will use them  to predict the growth ' \
+               'rate of their species in isolation and when in the community using COBRA tools. A list of ' \
+               'the community model file names was stored in the "{1}" file.' \
+               .format(len(model_filenames), output_filename)
 
 
 if __name__ == '__main__':
