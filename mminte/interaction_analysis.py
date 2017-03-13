@@ -5,13 +5,33 @@ from multiprocessing import Pool, cpu_count
 from .interaction_worker import growth_rate_columns, create_pair_model, compute_growth_rates
 
 
-def create_interaction_models(source_models, output_folder='data', n_processes=None):
-    """ Create two species community models for all pairs in a community.
+def get_all_pairs(source_models):
+    """ Get all of the unique pairs from a list of models.
 
     Parameters
     ----------
     source_models : list of str
         List of path names to model files
+
+    Returns
+    -------
+    list of tuple
+        List of tuples where each tuple has two elements, path to first model file in pair and
+        path to second model file in pair
+    """
+
+    return [pair for pair in combinations(source_models, 2)]
+
+
+def create_interaction_models(source_models, output_folder='data', n_processes=None):
+    """ Create two species community models for all pairs in a community.
+
+    So input here needs to be what combinations returns.
+    Parameters
+    ----------
+    source_models : list of tuple
+        List of tuples where each tuple has two elements, path to first model file in pair and
+        path to second model file in pair
     output_folder : str
         Path to folder where output community model files are saved
     n_processes: int, optional
@@ -30,7 +50,7 @@ def create_interaction_models(source_models, output_folder='data', n_processes=N
         n_processes = min(cpu_count(), 4)
     pool = Pool(n_processes)
     result_list = [pool.apply_async(create_pair_model, (pair, output_folder))
-                   for pair in combinations(source_models, 2)]
+                   for pair in source_models]
     output_models = [result.get() for result in result_list]
     pool.close()
     return output_models
