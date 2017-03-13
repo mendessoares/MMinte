@@ -55,20 +55,23 @@ def get_unique_otu_sequences(correlation_filename, sequence_filename, output_fil
     return len(sequences)
 
 
-def search(sequence_filename, output_folder):
+def search(sequence_filename, output_filename):
     """ Search for matches to known organisms from included 16S database.
 
     Parameters
     ----------
     sequence_filename : str
         Path to file with 16S rDNA sequences for unique OTUs
-    output_folder: str
-        Path to folder where blast output file is saved
+    output_filename: str
+        Path to file where blast output file is saved
 
     Returns
     -------
     list of str
         List of PATRIC genome IDs for known organisms
+    list of tuple
+        List of tuples with similarity information where each tuple has query sequence ID,
+        subject sequence ID, and percent of identical matches
 
     Raises
     ------
@@ -79,12 +82,11 @@ def search(sequence_filename, output_folder):
     # @todo Need to figure out how to install blast during package install
 
     # Run blast to search for matches to known organisms.
-    blast_cmd = join(mminte_folder, 'mminte/ncbi-blast-2.2.22+/bin/blastn')
-    output_file = join(output_folder, 'blast.txt')
+    blast_cmd = join(pkg_resources.resource_filename(__name__, '../bin'), 'blastn')
     cmdline = NcbiblastnCommandline(cmd=blast_cmd,
                                     query=sequence_filename,
                                     db=join(pkg_resources.resource_filename(__name__, 'data/db'), '16Sdb'),
-                                    out=output_file,
+                                    out=output_filename,
                                     outfmt=6,
                                     max_target_seqs=1,
                                     num_threads=4)
@@ -96,7 +98,7 @@ def search(sequence_filename, output_folder):
     genome_ids = set()
     query_ids = set()
     similarity = list()
-    with open(output_file, 'r') as handle:
+    with open(output_filename, 'r') as handle:
         for line in handle:
             fields = line.split()
             genome_ids.add(fields[1])
