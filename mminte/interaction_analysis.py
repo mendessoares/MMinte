@@ -26,7 +26,6 @@ def get_all_pairs(source_models):
 def create_interaction_models(source_models, output_folder='data', n_processes=None):
     """ Create two species community models for all pairs in a community.
 
-    So input here needs to be what combinations returns.
     Parameters
     ----------
     source_models : list of tuple
@@ -43,8 +42,11 @@ def create_interaction_models(source_models, output_folder='data', n_processes=N
         List of path names to two species community model files
     """
 
-    if len(source_models) < 2:
-        raise ValueError('There must be at least two models in the list of source models')
+    # Make sure the input list of models has exactly two elements in each tuple.
+    for index in range(len(source_models)):
+        if len(source_models[index]) != 2:
+            raise ValueError('There must be exactly two models at index {0} in the list of source models'
+                             .format(index))
 
     if n_processes is None:
         n_processes = min(cpu_count(), 4)
