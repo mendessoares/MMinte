@@ -1,6 +1,7 @@
 from cobra.io import save_json_model
 import json
 from pandas import Series
+from six import iteritems
 
 from .community import create_community_model, load_model_from_file, single_species_knockout
 
@@ -31,15 +32,15 @@ def create_pair_model(pair, output_folder):
     return community_filename
 
 
-def compute_growth_rates(pair_filename, media_filename):
+def compute_growth_rates(pair_filename, medium):
     """ Compute growth rates for a two species community model.
 
     Parameters
     ----------
     pair_filename : str
         Path to two species community model file
-    media_filename : str
-        Path to file with exchange reaction bounds for media
+    medium : dict
+        Dictionary with exchange reaction ID as key and bound as value
 
     Returns
     -------
@@ -47,9 +48,9 @@ def compute_growth_rates(pair_filename, media_filename):
         Growth rate details for interaction between two species in pair
     """
 
-    # Load the model and apply the media to it.
+    # Load the model and apply the medium to it.
     pair_model = load_model_from_file(pair_filename)
-    apply_medium(pair_model, media_filename)
+    apply_medium(pair_model, medium)
 
     # Optimize the model with two species together, one species knocked out, and
     # other species knocked out.
@@ -85,29 +86,42 @@ def compute_growth_rates(pair_filename, media_filename):
     return details
 
 
-def apply_medium(model, medium_filename):
+def apply_medium(model, medium):
     """ Apply a medium to a model to set the metabolites that can be consumed.
 
     Parameters
     ----------
     model : cobra.Model
         Model to apply medium to
-    medium_filename : str
-        Path to file with exchange reaction bound for medium
+    medium : dict
+        Dictionary with exchange reaction ID as key and bound as value
     """
 
-    # Load the medium from the file.
-    medium = json.load(open(medium_filename))
+    # Borrowed the code in this function for future compatibility with cobra 0.6.0.
 
-    # Get the list of exchange reactions. Only allow exchange reactions in the medium.
-    exchange_reactions = model.reactions.query(lambda x: x.startswith('EX_'))
+    def set_active_bound(reaction, bound):
+        if reaction.reactants:
+            reaction.lower_bound = -bound
+        elif reaction.products:
+            reaction.upper_bound = bound
 
-    # Update the bounds for exchange reactions based on the values in the medium.
-    for reaction in exchange_reactions:
-        if reaction.id in medium:
-            reaction.lower_bound = medium[reaction.id]
-        else:
-            reaction.lower_bound = 0.
+    # Set the given media bounds.
+    media_reactions = set()
+    for reaction_id, bound in iteritems(medium):
+        try:
+            reaction = model.reactions.get_by_id(reaction_id)
+            media_reactions.add(reaction)
+            set_active_bound(reaction, bound)
+        except KeyError:
+            pass
+
+    # Still not sure about using boundary attribute of cobra reaction because think
+    # it includes reactions that are not at the boundary (e.g. sink reactions).
+    exchange_reactions = set(model.reactions.query(lambda x: x.startswith('EX_')))
+
+    # Turn off reactions not present in media.
+    for reaction in (exchange_reactions - media_reactions):
+        set_active_bound(reaction, 0)
 
     return
 

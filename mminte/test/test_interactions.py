@@ -1,4 +1,5 @@
 import pytest
+import json
 from os import unlink
 from os.path import join
 from tempfile import gettempdir
@@ -15,7 +16,8 @@ class TestInteractions:
         assert len(pair_models) == 1
         assert pair_models[0] == '{0}/BTxFP.json'.format(gettempdir()) or pair_models[0] == '{0}/FPxBT.json'.format(gettempdir())
 
-        growth_rates = mminte.calculate_growth_rates(pair_models, join(data_folder, 'western.json'))
+        western = json.load(open(join(data_folder, 'western.json')))
+        growth_rates = mminte.calculate_growth_rates(pair_models, western)
         assert growth_rates.at[0, 'A_ID'] == 'BT'
         assert growth_rates.at[0, 'B_ID'] == 'FP'
         assert growth_rates.at[0, 'TYPE'] == 'Parasitism'
