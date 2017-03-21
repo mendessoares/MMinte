@@ -2,10 +2,6 @@ import pkg_resources
 from os.path import join
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
-from mackinac import get_modelseed_model_stats, reconstruct_modelseed_model, gapfill_modelseed_model, \
-    create_cobra_model_from_modelseed_model
-from mackinac.SeedClient import ObjectNotFoundError
-from cobra.io import save_json_model
 
 
 def get_unique_otu_sequences(correlation_filename, sequence_filename, output_filename):
@@ -79,11 +75,9 @@ def search(sequence_filename, output_filename):
         When there is an error running the blast command
     """
 
-    # @todo Need to figure out how to install blast during package install
-
     # Run blast to search for matches to known organisms.
-    blast_cmd = join(pkg_resources.resource_filename(__name__, '../bin'), 'blastn')
-    cmdline = NcbiblastnCommandline(cmd=blast_cmd,
+    # @todo Should it make me nervous to not use a fully-qualified path here?
+    cmdline = NcbiblastnCommandline(cmd='blastn',
                                     query=sequence_filename,
                                     db=join(pkg_resources.resource_filename(__name__, 'data/db'), '16Sdb'),
                                     out=output_filename,
@@ -109,36 +103,3 @@ def search(sequence_filename, output_filename):
     # Maybe build a pandas DataFrame which includes the target IDs in a column, extract them later.
 
     return list(genome_ids), similarity
-
-
-def create_organism_models(genome_ids, output_folder):
-    """ Create organism models from a list of PATRIC genome IDs.
-
-    Parameters
-    ----------
-    genome_ids : list of str
-        List of PATRIC genome IDs
-    output_folder: str
-        Path to folder where single organism models are stored
-
-    Returns
-    -------
-    list of str
-        List of paths to single organism model files
-    """
-
-    # @todo What if modelseed is weird, no model object error. Maybe it is just me
-    models = list()
-    for genome_id in genome_ids:
-        try:
-            stats = get_modelseed_model_stats(genome_id)
-        except ObjectNotFoundError:
-            stats = reconstruct_modelseed_model(genome_id)
-            stats = gapfill_modelseed_model(stats['id'])
-
-        model = create_cobra_model_from_modelseed_model(stats['id'])
-        model_filename = join(output_folder, '{0}.json'.format(stats['id']))
-        save_json_model(model, model_filename)
-        models.append(model_filename)
-
-    return models

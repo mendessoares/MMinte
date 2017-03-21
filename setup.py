@@ -143,11 +143,26 @@ class Install(_install):
 
 
 requirements = [
-    'six',
+    'biopython>=1.66',
+    'cobra==0.5.11',
+    'lxml',
+    'mackinac>=0.8.0',
+    'numpy>=1.12.0',
     'pandas>=0.18.0',
-    'cobra>=0.5.4',
-    'mackinac>=0.8.0'
+    'python-libsbml>=5.12.0',
+    'scipy>=0.18.0',
+    'six',
+    'tabulate'
 ]
+
+extras = {
+    'site': ['CherryPy>=10.2.0', 'DataSpyre>=0.2.6']
+}
+
+all_extras = {''}
+for extra in extras.values():
+    all_extras.update(extra)
+extras['all'] = sorted(list(all_extras))
 
 try:
     with open('README.rst') as handle:
@@ -159,11 +174,12 @@ setup(
     name='mminte',
     version='0.2.0',
     cmdclass={'install': Install},
-    packages=find_packages(),
+    packages=['mminte'],  # find_packages(),
     scripts=['bin/launchMMinte'],
     setup_requires=[],
     install_requires=requirements,
     tests_require=['pytest'],
+    extras_require=extras,
     package_data={
          '': ['data/db/*']
     },
