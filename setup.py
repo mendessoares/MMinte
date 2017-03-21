@@ -181,7 +181,7 @@ setup(
     tests_require=['pytest'],
     extras_require=extras,
     package_data={
-         '': ['data/db/*']
+         '': ['data/db/*', 'test/data/*']
     },
     author='Helena Mendes-Soares, Michael Mundy, Luis Mendes Soares, Nicholas Chia',
     author_email='microbialmetabolicinteractions@gmail.com',
