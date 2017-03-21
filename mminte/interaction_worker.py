@@ -1,5 +1,4 @@
 from cobra.io import save_json_model
-import json
 from pandas import Series
 from six import iteritems
 
