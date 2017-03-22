@@ -158,17 +158,17 @@ def copy_exchange_reaction(reaction):
 def create_community_model(source_models):
     """ Create a community model from a list of source models.
 
-        A community model contains all of the reactions and metabolites from the
-        source models. As a source model for a species is added to the community
-        model, a model ID prefix is added to the IDs of reactions and metabolites.
-        This is the same as assigning each species to a different compartment,
-        which is required because cells are closed compartments that do not share
-        metabolites. A shared compartment is added to the community model and all
-        unique exchange reactions from the source models are added to the community
-        model to exchange metabolites between the shared compartment and the system
-        boundary. For each source model, all exchange reactions are converted to
-        transport reactions to move the metabolite between the shared compartment
-        and the extracellular compartment of the source model.
+    A community model contains all of the reactions and metabolites from the
+    source models. As a source model for a species is added to the community
+    model, a model ID prefix is added to the IDs of reactions and metabolites.
+    This is the same as assigning each species to a different compartment,
+    which is required because cells are closed compartments that do not share
+    metabolites. A shared compartment is added to the community model and all
+    unique exchange reactions from the source models are added to the community
+    model to exchange metabolites between the shared compartment and the system
+    boundary. For each source model, all exchange reactions are converted to
+    transport reactions to move the metabolite between the shared compartment
+    and the extracellular compartment of the source model.
 
     Parameters
     ----------
