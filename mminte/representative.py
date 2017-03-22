@@ -7,13 +7,14 @@ from Bio.Blast.Applications import NcbiblastnCommandline
 def get_unique_otu_sequences(correlation_filename, sequence_filename, output_filename):
     """ Get the 16S rDNA sequences for the unique OTUs from a correlation file.
 
-        The correlation file describes the relationship between all OTUs in the analysis
-        and has three columns: (1) OTU identifier for first organism, (2) OTU identifier
-        for second organism, (3) association between organisms (typically correlation or
-        co-occurrence but can be any measure).
+    The correlation file describes the relationship between OTUs in the analysis
+    and has three columns: (1) OTU identifier for first organism, (2) OTU identifier
+    for second organism, (3) association between organisms (typically correlation or
+    co-occurrence but can be any measure).
 
-        The sequence file is a fasta file with the 16S rDNA sequences for all of the
-        OTUs in the analysis.
+    The sequence file is a fasta file with the 16S rDNA sequences of the OTUs in the
+    analysis. The record ID in each fasta record must be an OTU number.  All of the
+    OTUs in the correlation file must have a record in the fasta file.
 
     Parameters
     ----------
@@ -39,11 +40,20 @@ def get_unique_otu_sequences(correlation_filename, sequence_filename, output_fil
             unique_otu.add(line[0])
             unique_otu.add(line[1])
 
-    # Find the 16S rDNA sequences for the unique OTUs.
+    # Find the 16S rDNA sequences for the unique OTUs in the fasta file.
     sequences = list()
+    found_otu = set()
     for record in SeqIO.parse(sequence_filename, 'fasta'):
         if record.id in unique_otu:
             sequences.append(record)
+            found_otu.add(record.id)
+
+    # Make sure all of the OTUs from the correlation file have a 16S rDNA
+    # sequence in the fasta file.
+    missing_otu = unique_otu - found_otu
+    if len(missing_otu) > 0:
+        raise ValueError('Sequence fasta file "{0}" does not contain records for OTUs: {1}'
+                         .format(sequence_filename, missing_otu))
 
     # Store the unique sequences in the output file.
     SeqIO.write(sequences, output_filename, 'fasta')
