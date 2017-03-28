@@ -2,6 +2,11 @@ import pkg_resources
 from os.path import join
 from Bio import SeqIO
 from Bio.Blast.Applications import NcbiblastnCommandline
+import pandas as pd
+
+
+# Column names for similarity information data frame.
+similarity_columns = ['OTU_ID', 'GENOME_ID', 'SIMILARITY']
 
 
 def get_unique_otu_sequences(correlation_filename, sequence_filename, output_filename):
@@ -21,9 +26,9 @@ def get_unique_otu_sequences(correlation_filename, sequence_filename, output_fil
     correlation_filename : str
         Path to file with correlations for pairs of OTUs
     sequence_filename : str
-        Path to file with 16S rDNA sequences for all OTUs
+        Path to fasta file with 16S rDNA sequences for all OTUs
     output_filename: str
-        Path to file with 16S rDNA sequences for unique OTUs
+        Path to fasta file with 16S rDNA sequences for unique OTUs
 
     Returns
     -------
@@ -75,9 +80,8 @@ def search(sequence_filename, output_filename):
     -------
     list of str
         List of PATRIC genome IDs for known organisms
-    list of tuple
-        List of tuples with similarity information where each tuple has query sequence ID,
-        subject sequence ID, and percent of identical matches
+    pandas.DataFrame
+        Similarity information with OTU ID, genome ID, and percent similarity of match
 
     Raises
     ------
@@ -96,20 +100,54 @@ def search(sequence_filename, output_filename):
                                     num_threads=4)
     cmdline()  # Raises ApplicationError when there is a problem
 
+    # @todo Need to understand why there is entry with 0% similarity.
+
     # Parse the blast output file with the results. In output format 6, the second
     # field is the ID of match in target database. In our case that is the PATRIC
     # genome ID of the organism with the matching 16S sequence.
     genome_ids = set()
     query_ids = set()
-    similarity = list()
+    similarity = pd.DataFrame(columns=similarity_columns)
     with open(output_filename, 'r') as handle:
         for line in handle:
             fields = line.split()
             genome_ids.add(fields[1])
             if fields[0] not in query_ids:
                 query_ids.add(fields[0])
-                similarity.append((fields[0], fields[1], fields[2]))
-
-    # Maybe build a pandas DataFrame which includes the target IDs in a column, extract them later.
+                similarity = similarity.append(pd.Series([fields[0], fields[1], fields[2]],
+                                                         index=similarity_columns),
+                                               ignore_index=True)
 
     return list(genome_ids), similarity
+
+
+def read_similarity_file(similarity_filename):
+    """ Read a file with the saved similarity data frame.
+
+    Parameters
+    ----------
+    similarity_filename : str
+        Path to file with similarity data frame in CSV format
+
+    Returns
+    -------
+    pandas.DataFrame
+        Similarity information with OTU ID, genome ID, and percent similarity of match
+    """
+
+    return pd.read_csv(similarity_filename, dtype={'OTU_ID': str, 'GENOME_ID': str})
+
+
+def write_similarity_file(similarity, similarity_filename):
+    """ Write a similarity data frame to a file.
+
+    Parameters
+    ----------
+    similarity : pandas.DataFrame
+        Similarity information with OTU ID, genome ID, and percent similarity of match
+    similarity_filename : str
+        Path to file for storing similarity data frame in CSV format
+    """
+
+    similarity.to_csv(similarity_filename, index=False)
+    return
