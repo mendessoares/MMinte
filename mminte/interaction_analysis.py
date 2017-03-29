@@ -1,6 +1,6 @@
 from itertools import combinations
 from os.path import join, exists
-from pandas import DataFrame
+import pandas as pd
 from multiprocessing import Pool, cpu_count
 from warnings import warn
 from cobra.io import load_json_model, save_json_model
@@ -188,8 +188,40 @@ def calculate_growth_rates(pair_models, medium, n_processes=None):
     pool = Pool(n_processes)
     result_list = [pool.apply_async(compute_growth_rates, (pair_filename, medium))
                    for pair_filename in pair_models]
-    growth_rates = DataFrame(columns=growth_rate_columns)
+    growth_rates = pd.DataFrame(columns=growth_rate_columns)
     for result in result_list:
         growth_rates = growth_rates.append(result.get(), ignore_index=True)
     pool.close()
     return growth_rates
+
+
+def read_growth_rates_file(growth_rates_filename):
+    """ Read a file with the saved growth rates data frame.
+
+    Parameters
+    ----------
+    growth_rates_filename : str
+        Path to file with growth rates data frame in CSV format
+
+    Returns
+    -------
+    pandas.DataFrame
+        Growth rates information
+    """
+
+    return pd.read_csv(growth_rates_filename, dtype={'A_ID': str, 'B_ID': str})
+
+
+def write_growth_rates_file(growth_rates, growth_rates_filename):
+    """ Write a growth rates data frame to a file.
+
+    Parameters
+    ----------
+    growth_rates : pandas.DataFrame
+        Growth rates information
+    growth_rates_filename : str
+        Path to file for storing growth rates data frame in CSV format
+    """
+
+    growth_rates.to_csv(growth_rates_filename, index=False)
+    return
