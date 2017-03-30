@@ -1,4 +1,5 @@
-from .MMinteIntro import Index
+from .mminte_widget import MMinteApp, MMinteRoot
+from .MMinteIntro import Intro
 from .MMinteW1 import Widget1
 from .MMinteW2 import Widget2
 from .MMinteW3 import Widget3

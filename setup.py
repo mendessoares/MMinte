@@ -118,7 +118,9 @@ def install_blast(install_folder, replace_install=False):
         print('installed {0} at {1}'.format(blast_exe, install_folder))
 
     else:
-        os.symlink(blast_exe_path, join(install_folder, blast_exe))
+        target = join(install_folder, blast_exe)
+        if not exists(target):
+            os.symlink(blast_exe_path, target)
         print('found {0} installed at {1}'.format(blast_exe, blast_exe_path))
 
 
@@ -174,14 +176,14 @@ setup(
     name='mminte',
     version='0.2.0',
     cmdclass={'install': Install},
-    packages=['mminte'],  # find_packages(),
+    packages=['mminte', 'mminte/site'],  # find_packages(),
     scripts=['bin/launchMMinte'],
     setup_requires=[],
     install_requires=requirements,
     tests_require=['pytest'],
     extras_require=extras,
     package_data={
-         '': ['data/db/*', 'test/data/*']
+         '': ['data/db/*', 'test/data/*', 'site/static/*']
     },
     author='Helena Mendes-Soares, Michael Mundy, Luis Mendes Soares, Nicholas Chia',
     author_email='microbialmetabolicinteractions@gmail.com',

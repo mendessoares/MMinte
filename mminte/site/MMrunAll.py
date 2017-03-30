@@ -1,359 +1,210 @@
-import os
 from pkg_resources import resource_filename
-from widget1 import getUniqueOTU, getSeqs, workingOTUs
-from widget2 import blastSeqs, listTaxId4ModelSEED
-from widget3 import getModels
-from widget4 import totalEXRxns,createEXmodel,createReverseEXmodel, addEXMets2SpeciesEX, replaceRxns,replaceMets,createCommunityModel,allPairComModels,createAllPairs,createSubsetPairs
-from widget5 import getListOfModels,calculateGR
-from widget6 import evaluateInteractions
-from widget7 import nodes,links,createJSONforD3
-
-from os import listdir
-from os.path import isfile, join
+from os import listdir, makedirs
+from os.path import isfile, join, exists
 import webbrowser
 
-
 import cherrypy
-from spyre import server
 
-class custom_root(server.Root):
-    @cherrypy.expose
-    def widget7_out(self):
-        with open(resource_filename(__name__, 'index.html')) as data:
-            return data.read()
-
-    @cherrypy.expose
-    def d3(self):
-        with open(resource_filename(__name__, 'd3.v3.min.js')) as data:
-            return data.read()
-
-    @cherrypy.expose
-    def data4plot_json(self):
-        with open(resource_filename(__name__, 'data2plot_json')) as data:
-            return data.read()
+from mminte import get_unique_otu_sequences, search, write_similarity_file, create_species_models, \
+    get_all_pairs, create_interaction_models, read_diet_file, calculate_growth_rates, write_growth_rates_file, \
+    read_correlation_file, make_d3_source
+from mminte.site import MMinteApp
 
 
-server.Root=custom_root
-
-class WidgetRunAll(server.App):
+class WidgetRunAll(MMinteApp):
     title = 'Run All'
 
-    inputs = [{"type": "text",
-        "key": "text28",
-        "label": "<font size=4pt>We're going to run the full pipeline for your data. You only need to give us two files</font><br><br><font size=3pt>The file that has the information about associated OTUs</font>",
-         "value": "Enter the path to your file"},
+    def __init__(self):
+        self.inputs = [
+            {"type": "text",
+             "key": "analysis_folder",
+             "label": "This widget runs the full pipeline for your analysis. You only need to provide "
+                      "three files: the correlation file, the sequence file, and the diet file.<br><br>"
+                      "Enter the location of the folder for storing the files for this analysis",
+             "value": self.getRoot().analysisFolder()},
 
-        {"type": "text",
-         "key": "text29",
-         "label": "<font size=3pt>The file that has the sequences of the representative OTUs</font>",
-         "value": "Enter the path to your file"},
+            {"type": "text",
+             "key": "correlation_file",
+             "label": "Enter the location of the file with the information about the correlations "
+                      "between associated OTUs. Use the example correlation file included with the "
+                      "mminte package or enter the location of the file for your analysis",
+             "value": resource_filename('mminte', 'test/data/correlation.txt')},
 
-        {"type":"dropdown",
-        "key":'dropdown2',
-        "label" : "<font size=3pt> Do you want the network to be plotted in this browser tab or in a new one </font>",
-        "options" :[{"label": "This one", "value":"Current"},
-                    {"label": "New one", "value":"New"}],
-                    "value":'Current'}
-    ]
+            {"type": "text",
+             "key": "representative_otu_file",
+             "label": "Enter the location of the file with the sequences of the representative OTUs. "
+                      "Use the example sequence file included with the mminte package or enter the "
+                      "location of the file for your analysis",
+             "value": resource_filename('mminte', 'test/data/all_otus.fasta')},
 
-    outputs = [{"type":"html",
-                "id":"some_html",
-                "control_id":"run_widget",
-                "tab":"Results",
-                "on_page_load": False}]
+            {"type": "text",
+             "key": "diet_file",
+             "label": "You can determine which kind of metabolites are available for the "
+                      "organisms by choosing a diet. In the ms_complete100 diet, over 400 metabolites are available "
+                      "to the community, with a flux for the import reactions of 100 mmol/gDW/hr. The ms_complete10 diet "
+                      "contains the same metabolites, but the reaction fluxes are 10 mmol/gDW/hr, and in the "
+                      "ms_complete1 diet the fluxes are 1 mmol/gDW/hr. Enter the location of the file with the"
+                      "metabolites and bounds for the diet",
+             "value": resource_filename("mminte", "test/data/ms_complete100.txt")},
 
-    controls = [{"type":"button",
-                 "label":"Run Full Analysis",
-                 "id":"run_widget"}]
+            {"type": "dropdown",
+             "key": "browser_tab",
+             "label": "Do you want the network to be plotted in this browser tab or in a new tab",
+             "options": [{"label": "This tab", "value": "Current"},
+                         {"label": "New tab", "value": "New"}],
+             "value": 'Current'},
+        ]
 
-    tabs = ["Results"]
+        self.controls = [
+            {"type": "button",
+             "label": "Run Full Analysis",
+             "id": "run_widget"}
+        ]
 
+        self.outputs = [
+            {"type":"html",
+             "id":"some_html",
+             "control_id":"run_widget",
+             "tab":"Results",
+             "on_page_load": False}
+        ]
 
-    def getCustomCSS(self):
-        with open(resource_filename(__name__, 'static/custom_styleMMinte.css')) as style:
-            return style.read()+'''\n .right-panel{width:65%;margin: 1em}'''
+        self.tabs = ["Results"]
 
+    def getHTML(self, params):
+        """ Run Widget All and generate HTML output for Results tab. """
 
+        # Validate input parameters.
+        cherrypy.log('Widget All input parameters: {0}'.format(params))
+        if not exists(params['correlation_file']):
+            cherrypy.log('Widget All: correlation file "{0}" was not found'.format(params['correlation_file']))
+            return 'Sorry, correlation file "{0}" was not found. Make sure the path to the file is correct.' \
+                   .format(params['correlation_file'])
+        if not exists(params['representative_otu_file']):
+            cherrypy.log('Widget All: representative OTU file "{0}" was not found'
+                         .format(params['representative_otu_file']))
+            return 'Sorry, representative OTU file "{0}" was not found. Make sure the path to the file is correct.' \
+                   .format(params['representative_otu_file'])
+        if not exists(params['analysis_folder']):
+            try:
+                makedirs(params['analysis_folder'])
+            except Exception as e:
+                cherrypy.log('Widget All: Error creating folder "{0}" for analysis files: {1}'
+                             .format(params['analysis_folder'], e))
+                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
 
-
-    def getHTML(self,params):
-        corrsFile = params['text28']
-        sequencesFile = params['text29']
-
-        cherrypy.log("We will run the full analysis.")
-
-        '''
-        Run Widget 1
-        '''
-
-        if not os.path.exists('../fullRun/userOutput/'):
-            os.makedirs('../fullRun/userOutput/')
-
-        outputFasta = '../fullRun/userOutput/reprOTUs.fasta'
-
-        cherrypy.log("We're going to start running Widget 1. The files we are using are %s for the correlations and %s for the sequences. The output, that is the reduced dataset can be found in %s." %(corrsFile,sequencesFile,outputFasta))
-
+        # Widget 1 - Get the unique OTU sequences.
         try:
-            corrs = getUniqueOTU(corrsFile)
-        except:
-            cherrypy.log("We were unable to run getUniqueOTU.")
-            return "Sorry something's wrong. Make sure the path to your file is correct."
-            exit()
+            cherrypy.log('Widget All: Started getting unique OTU sequences')
+            unique_otus_file = join(params['analysis_folder'], 'unique_otus.fasta')
+            get_unique_otu_sequences(params['correlation_file'], params['representative_otu_file'],
+                                     unique_otus_file)
+            cherrypy.log("Widget All: Finished getting unique OTU sequences")
 
+        except Exception as e:
+            cherrypy.log('Widget All: Error getting unique OTU sequences: {0}'.format(e))
+            return "Sorry something went wrong. Make sure the paths to your files are correct.<br>" \
+                   "Exception: {0}.".format(e)
+
+        # Widget 2 - Run blast search to find matching bacterial species.
         try:
-            seqs = getSeqs(sequencesFile)
-        except:
-            cherrypy.log("We were unable to run getSeqs.")
-            return "Sorry something's wrong. Make sure the path to your file is correct."
-            exit()
+            cherrypy.log('Widget All: Started blast search for matching bacterial species')
+            blast_output_file = join(params['analysis_folder'], 'blast.txt')
+            genome_ids, similarity = search(unique_otus_file, blast_output_file)
+            cherrypy.log("Widget All: Finished running blast search")
+            with open(join(params['analysis_folder'], 'genome_ids.txt'), 'w') as handle:
+                handle.write('\n'.join(genome_ids))
+            write_similarity_file(similarity, join(params['analysis_folder'], 'similarity.csv'))
 
+        except Exception as e:
+            cherrypy.log("Widget All: Error running blast search: {0}".format(e))
+            return "Sorry something went wrong. Make sure the paths to your files are correct and " \
+                   "that the correct version of blast is installed.<br>Exception: {0}".format(e)
+
+        # Widget 3 - Create single species models using ModelSEED.
+        model_folder = join(params['analysis_folder'], 'single_models')
+        if not exists(model_folder):
+            try:
+                makedirs(model_folder)
+            except Exception as e:
+                cherrypy.log('Widget 3: Error creating folder "{0}" for model files: {1}'
+                             .format(params['model_folder'], e))
+                return 'Sorry something went wrong creating the folder "{0}" for the model files. Make sure ' \
+                       'the path to the folder is correct.<br>Exception: {1}'.format(params['model_folder'], e)
         try:
-            workingOTUs(corrs,seqs,outputFasta)
-        except:
-            cherrypy.log("We were unable to run workingOTUs.")
-            return "Sorry something's wrong. Make sure the path to your file is correct."
-            exit()
-
-        cherrypy.log('We successfully finished running Widget 1.')
-
-
-
-        '''
-        Run Widget 2
-        '''
-
-
-        tempOutputFile = '../fullRun/tempFiles/blastOutput.txt'
-        seqsToBlast = '../fullRun/userOutput/reprOTUs.fasta'
-        outputSimil = '../fullRun/userOutput/simil.txt'
-        outputIDs = '../fullRun/userOutput/ids4MS.txt'
-
-        cherrypy.log('We will now start running Widget 2. We will be blasting the sequences in %s and creating a file with the percent similarity between the query sequences and the sequences they matched to in %s . We will output a list of genome IDs to be collected from modelSEED to %s .' %(seqsToBlast,outputSimil,outputIDs))
-
-        blastSeqs(seqsToBlast)
-
-        cherrypy.log('Finished blasting the sequences.')
-
-        listTaxId4ModelSEED(outputSimil,outputIDs)
-
-        cherrypy.log('Finished running Widget 2.')
-
-        '''
-        Run Widget 3
-        '''
-
-        modelFolder = '../fullRun/userOutput/models/'
-        listIDs = '../fullRun/userOutput/ids4MS.txt'
-
-        cherrypy.log('Will now run Widget 3. We will go over the genome IDs in %s and reconstruct metabolic models for those species. We will put all the models in %s .' %(listIDs, modelFolder))
-
-
-        if not os.path.exists(modelFolder):
-            os.makedirs(modelFolder)
-
-
-        listOfModels = open(listIDs,'r')
-        mypath = modelFolder
-
-        existingModels = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-
-
-        for i in listOfModels:
-            cherrypy.log("Will now see if %s is in the folder already" %i)
-            i = i.rstrip()
-            if (i + '.sbml') not in existingModels:
-                cherrypy.log("The model %s isn't in the folder, so we're going to fetch it from ModelSeed" %i)
-                try:
-                    cherrypy.log("Started getting model for genome %s" %i)
-                    getModels(i,modelFolder)
-                    cherrypy.log("We finished getting the metabolic model for genome %s from ModelSEED." %i)
-                except:
-                    #cherrypy.log("We were either unable to run getModels or were unable to get the metabolic models we wanted from ModelSEED. We'll keep going for now and try the next model.")
-                    #return "Sorry something's wrong. Make sure the path to your file is correct."
-                    pass
-                continue
-            else:
-                cherrypy.log("The model %s was already in the folder" %i)
-                continue
-
-        cherrypy.log('We were are done reconstructing the metabolic models and exporting them to the local machine. Therefore, we are done running Widget 3.')
-
-        '''
-        Run Widget 4
-        '''
-
-        comFolder = '../fullRun/userOutput/comModels/'
-        modelFolder = '../fullRun/userOutput/models/'
-        similFile = '../fullRun/userOutput/simil.txt'
-
-        cherrypy.log('We will now run Widget 4. ')
-
-        if not os.path.exists(comFolder):
-            os.makedirs(comFolder)
-
-
-        createSubsetPairs(similFile,corrsFile)
-
-
-        pairsList = '../tempFiles/pairsList.txt'
-
-        allPairComModels(pairsList,modelFolder,comFolder)
-
-
-        '''
-        Run Widget 5
-        '''
-        food = 'Complete'
-        outputGRs = '../fullRun/userOutput/GRsComplete.txt'
-        comFolder = '../fullRun/userOutput/comModels/'
-
-
-        calculateGR(food, outputGRs, comFolder)
-
-        '''
-        Run Widget 6
-        '''
-
-        inGRs = '../fullRun/userOutput/GRsComplete.txt'
-        outInter = '../fullRun/userOutput/interactionsComplete.txt'
-
-
-        evaluateInteractions(inGRs, outInter)
-
-
-        '''
-        Run Widget 7
-        '''
-
-        inNodes = '../fullRun/userOutput/simil.txt'
-        inLinks = corrsFile
-        inInter = '../fullRun/userOutput/interactionsComplete.txt'
-
-        node = nodes(inNodes)
-        link = links(inNodes,inLinks,inInter)
-
-        createJSONforD3(node,link)
-
-
-        ROOT_DIR = os.path.dirname(os.path.realpath('index.html'))
-        full_path = ROOT_DIR + '/index.html'
-
-
-        script='''<style>
-
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-.link {
-  stroke: #999;
-  stroke-opacity: .6;
-}
-
-</style>
-
-<script src="d3"></script> <!-- changed this from the source in the website to be local source -->
-<script window.onload>
-
-
-    height = 800;
-
-var colorNodes = d3.scale.linear()
-      .domain([1,2,3,4,5,6])
-      .range(["#3d3d3d","4a4a4a","565656", "#636363", "#707070","#d9d9d9"]); <!-- colors for nodes -->
-
-
-var colorLinks = d3.scale.linear()
-    .domain([2,1,0])
-    .range(["#2ca02c","#d62728","#c7c7c7"]); <!-- colors for links, green, red, grey -->
-
-
-
-
-
-document.onload=d3.json("data4plot_json", function(error, graph) {
-  var width=document.getElementById('some_html').offsetWidth;
-var force = d3.layout.force()
-    .charge(-150)
-    .size([width, height])
-   	.linkDistance(function(link) {
-       return link.value*20;
-    });
-  var svg = d3.select("body").select("#some_html").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-  if (error) throw error;
-
-
-  force
-      .nodes(graph.nodes)
-      .links(graph.links)
-      .start();
-
-
-
-  var link = svg.selectAll(".link")
-      .data(graph.links)
-      .enter().append("line")
-      .attr("class", "link")
-      .style("stroke-width", function(d) { return (6*1/d.value); })
-      .style("stroke", function(d) {return colorLinks(d.interaction);});
-
-  var node = svg.selectAll(".node")
-      .data(graph.nodes)
-    .enter().append("circle")
-      .attr("class", "node")
-      .attr("r", 5)
-      .style("fill", function(d) { return colorNodes(d.group); })
-      .call(force.drag);
-
-  node.append("title")
-      .text(function(d) { return d.name; });
-
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
-
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
-  });
-});
-
-</script>
-'''
-        head = ["The plot with the network of interactions between your favorite organisms is shown on a new tab."]
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append("The shading of the nodes indicates how close the sequence of the OTU is to the sequence of the genome. The darker the node, the higher the similarity.")
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append("The length and thickness of the links reflect the association values on the initial file you provided. The shorter and thicker the link, the higher the association value.")
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append("The colors of the links reflect the kind of interaction. The red, green and grey represent negative, positive and no interaction, respectively.")
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<a href="http://d3js.org/" >D3 is awesome</a>! If you mouse over the nodes, you get the id of the OTU, and if you click a node and drag it, the network will follow it.')
-        head.append("You can find all the intermediate files in the folder called fullRun.")
-
-
-        if params['dropdown2'] == 'Current':
-            head.append(script)
+            cherrypy.log('Widget All: Started creating models for {0} genomes'.format(len(genome_ids)))
+            single_filenames = create_species_models(genome_ids, model_folder)
+            cherrypy.log('Widget All: Created and downloaded {0} models'.format(len(single_filenames)))
+            output_filename = join(params['analysis_folder'], 'single_model_filenames.txt')
+            with open(output_filename, 'w') as handle:
+                handle.write('\n'.join(single_filenames))
+        except Exception as e:
+            cherrypy.log('Widget All: Error creating models: {0}'.format(e))
+            return "Sorry something went wrong creating metabolic models using ModelSEED.<br>" \
+                   "Exception: {0}".format(e)
+
+        # Widget 4 - Create two species community models.
+        pair_model_folder = join(params['analysis_folder'], 'pair_models')
+        if not exists(pair_model_folder):
+            try:
+                makedirs(pair_model_folder)
+            except Exception as e:
+                cherrypy.log('Widget All: We were unable to create folder "{0}" for community model files'
+                             .format(pair_model_folder))
+                return 'Sorry something went wrong creating the folder "{0}" for the community model files. ' \
+                       'Make sure the path to the folder is correct.<br>Exception: {1}' \
+                       .format(pair_model_folder, e)
+        try:
+            pairs = get_all_pairs(single_filenames)
+            cherrypy.log('Widget All: Started creating community models from {0} pairs of single species models'
+                         .format(len(pairs)))
+            pair_filenames = create_interaction_models(pairs, output_folder=pair_model_folder)
+            cherrypy.log("Widget All: Finished creating {0} community models".format(len(pair_filenames)))
+            output_filename = join(params['analysis_folder'], 'pair_model_filenames.txt')
+            with open(output_filename, 'w') as handle:
+                handle.write('\n'.join(pair_filenames))
+        except Exception as e:
+            cherrypy.log("Widget All: Error creating community models: {0}".format(e))
+            return "Sorry something's wrong. Make sure the path to your file is correct and " \
+                   "that the Python package cobrapy is loaded into your system.<br>Exception: {0}".format(e)
+
+        # Widget 5 - Calculate growth rates for the two species models.
+        try:
+            cherrypy.log("Widget All: Starting the growth rate calculations for {0} pair models"
+                         .format(len(pair_filenames)))
+            medium = read_diet_file(params['diet_file'])
+            growth_rates = calculate_growth_rates(pair_filenames, medium)
+            cherrypy.log("Widget All: Finished calculating the growth rates of the species")
+            write_growth_rates_file(growth_rates, join(params['analysis_folder'], 'growth_rates.csv'))
+
+        except Exception as e:
+            cherrypy.log("Widget All: Error calculating growth rates: {0}".format(e))
+            return "Sorry something's wrong. Make sure the path to your file is correct.<br>Exception: {0}".format(e)
+
+        # Widget 6 - Generate data for plot of interaction network.
+        self.getRoot().analysisFolder(params['analysis_folder'])
+        correlation = read_correlation_file(params['correlation_file'])
+        make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
+
+        # Generate the output for the Results tab.
+        text = ["The plot with the network of interactions between your organisms is shown below or"
+                "on a new tab.<br>The shading of the nodes indicates how close the sequence of the "
+                "OTU is to the sequence of the genome. The darker the node, the higher the similarity.<br"
+                "The length and thickness of the links reflect the association values on the initial "
+                "file you provided. The shorter and thicker the link, the higher the association value.<br"
+                "The colors of the links reflect the kind of interaction. The red, green and grey "
+                "represent negative, positive and no interaction, respectively.<br>"
+                "<a href='http://d3js.org/'>D3 is awesome</a>! If you mouse over the nodes, you get "
+                "the id of the OTU, and if you click a node and drag it, the network will follow it."]
+
+        if params['browser_tab'] == 'Current':
+            with open(resource_filename(__name__, 'static/plot.html')) as page:
+                text.append(page.read())
         else:
-            webbrowser.open('http://localhost:8080/widget7_out',new=1)
+            webbrowser.open('http://localhost:8080/widget6_out', new=1)
 
-        return head
-
-        return head
-
-
+        return text
 
 
 if __name__ == '__main__':

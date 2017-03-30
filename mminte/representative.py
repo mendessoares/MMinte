@@ -38,12 +38,10 @@ def get_unique_otu_sequences(correlation_filename, sequence_filename, output_fil
 
     # Find all of the unique OTUs in the correlation file.
     unique_otu = set()
-    with open(correlation_filename, 'r') as handle:
-        handle.readline()  # Skip header line
-        for line in handle:
-            line = line.rstrip().split()
-            unique_otu.add(line[0])
-            unique_otu.add(line[1])
+    correlations = read_correlation_file(correlation_filename)
+    for corr in correlations:
+        unique_otu.add(corr[0])
+        unique_otu.add(corr[1])
 
     # Find the 16S rDNA sequences for the unique OTUs in the fasta file.
     sequences = list()
@@ -91,7 +89,7 @@ def search(sequence_filename, output_filename):
 
     # Run blast to search for matches to known organisms.
     # @todo Should it make me nervous to not use a fully-qualified path here?
-    cmdline = NcbiblastnCommandline(cmd='blastn',
+    cmdline = NcbiblastnCommandline(cmd='/Users/m097749/Envs/mminte-py27/bin/blastn',
                                     query=sequence_filename,
                                     db=join(pkg_resources.resource_filename(__name__, 'data/db'), '16Sdb'),
                                     out=output_filename,
@@ -99,8 +97,6 @@ def search(sequence_filename, output_filename):
                                     max_target_seqs=1,
                                     num_threads=4)
     cmdline()  # Raises ApplicationError when there is a problem
-
-    # @todo Need to understand why there is entry with 0% similarity.
 
     # Parse the blast output file with the results. In output format 6, the second
     # field is the ID of match in target database. In our case that is the PATRIC
@@ -117,6 +113,10 @@ def search(sequence_filename, output_filename):
                 similarity = similarity.append(pd.Series([fields[0], fields[1], fields[2]],
                                                          index=similarity_columns),
                                                ignore_index=True)
+            else:
+                current = similarity.loc[similarity['OTU_ID'] == fields[0]]
+                if current.iloc[0]['GENOME_ID'] != fields[1]:
+                    print 'this is not good'
 
     return list(genome_ids), similarity
 
@@ -151,3 +151,39 @@ def write_similarity_file(similarity, similarity_filename):
 
     similarity.to_csv(similarity_filename, index=False)
     return
+
+
+def read_correlation_file(correlation_filename):
+    """ Read a file with the correlation between OTUs.
+
+    The correlation file describes the relationship between OTUs in the analysis. Each
+    line must have three fields and the first line of the file is a header line that
+    is ignored. The first two fields are OTU IDs and the third field is a correlation
+    value that must be in the range -1.0 to 1.0.
+
+    Parameters
+    ----------
+    correlation_filename : str
+        Path to file with similarity data frame in CSV format
+
+    Returns
+    -------
+    list of tuple
+        Each tuple has first OTU ID, second OTU ID, and correlation value
+    """
+
+    correlations = list()
+    with open(correlation_filename, 'r') as handle:
+        handle.readline()  # Skip header line
+        line_num = 1
+        for line in handle:
+            line_num += 1
+            fields = line.strip().split()
+            if len(fields) != 3:
+                raise ValueError('Line {0} in correlation file must have three fields'.format(line_num))
+            value = float(fields[2])
+            if value < -1.0 or value > 1.0:
+                raise ValueError('Correlation value {0} on line {1} in correlation file is out of range'
+                                 .format(value, line_num))
+            correlations.append((fields[0], fields[1], value))
+    return correlations

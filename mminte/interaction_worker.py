@@ -4,9 +4,12 @@ from six import iteritems
 
 from .community import create_community_model, load_model_from_file, single_species_knockout
 
-# Column names for reporting growth rate results.
+# Column names for data frame reporting growth rate results.
 growth_rate_columns = ['A_ID', 'B_ID', 'TYPE', 'TOGETHER', 'A_TOGETHER', 'B_TOGETHER',
                        'A_ALONE', 'B_ALONE', 'A_CHANGE', 'B_CHANGE']
+
+# Cutoff for rounding growth rate to zero.
+growth_rate_cutoff = 1e-12
 
 
 def create_pair_model(pair, output_folder):
@@ -14,7 +17,7 @@ def create_pair_model(pair, output_folder):
 
     Parameters
     ----------
-    pair : list of str
+    pair : tuple
         Each element is a path to a single species model file
     output_folder : str
         Path to output folder where community model JSON file is saved
@@ -61,6 +64,16 @@ def compute_growth_rates(pair_filename, medium):
     t_solution = pair_model.optimize()
     a_solution = single_species_knockout(pair_model, b_id)
     b_solution = single_species_knockout(pair_model, a_id)
+
+    # Round very small growth rates to zero.
+    if t_solution.x_dict[a_objective] < growth_rate_cutoff:
+        t_solution.x_dict[a_objective] = 0.
+    if t_solution.x_dict[b_objective] < growth_rate_cutoff:
+        t_solution.x_dict[b_objective] = 0.
+    if a_solution.x_dict[a_objective] < growth_rate_cutoff:
+        a_solution.x_dict[a_objective] = 0.
+    if b_solution.x_dict[b_objective] < growth_rate_cutoff:
+        b_solution.x_dict[b_objective] = 0.
 
     # Evaluate the interaction between the two species.
     if t_solution.status == 'optimal' and a_solution.status == 'optimal' and b_solution.status == 'optimal':
@@ -150,6 +163,7 @@ def evaluate_interaction(a_together, b_together, a_alone, b_alone):
     """
 
     # Calculate the effect of the presence of species B on the growth rate of species A.
+    # a_alone < 1e-12 should be reported as 0
     if a_alone == 0.:
         a_alone = float(1e-25)
     a_percent_change = (a_together - a_alone) / a_alone

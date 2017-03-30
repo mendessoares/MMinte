@@ -1,0 +1,152 @@
+<!-- Index page for MMinte app -->
+<head>
+    <meta name="description" content="MMinte - Microbial metabolic interaction">
+    <META NAME="ROBOTS" CONTENT="INDEX, FOLLOW">
+</head>
+<style>
+    body {
+        background-color: #fdfdfd;
+        padding: 2em;
+        margin-left:1em;
+        margin-right:1em;
+        margin-top:1em;
+        margin-bottom:1em;
+        border-radius: 10px;
+    }
+    p {
+        color: black;
+        text-align: justify;
+        font-family: Arial, Helvetica, sans-serif;;
+        font-size: 16px;
+        line-height: 1.2;
+        text-indent: 2em;
+    }
+    p.contact {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        text-align: center;
+        text-indent: 0em;
+    }
+    ul {
+        text-align: justify;
+        list-style-type: none;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 16px;
+        line-height:1.3;
+    }
+    img.displayed {
+        width:65em;
+        height:27em;
+        display: block;
+        margin-left: auto;
+        margin-right: auto
+    }
+    img.flow {
+        width: 30em;
+        height: 40em;
+        float:right;
+        margin: 0 10px 10px 20px;
+        border: 2px solid black;
+    }
+</style>
+<body>
+    <img class="displayed" src='/image1' alt="MMinte logo">
+    <div>
+        <h1 class="text">Welcome to MMinte!</h1>
+
+        <h2>The least you need to know</h2>
+        <p>
+            The microbiome is an expanding field of research in the biological sciences. Its integrative
+            approaches have mostly included 16S rDNA surveys. These surveys have been used to generate
+            associative community network topologies, but do not assess the mechanistic basis of these
+            associations. Here, we present <strong><font color=#00961E>MMinte</font></strong> a tool
+            for assessing the microbial metabolic interactions within a microbiome network.  With
+            <strong><font color=#00961E>MMinte</font></strong>, users need only provide a table containing
+            pairs of operational taxonomic units (OTUs) that will be the focus of the analysis and
+            representative sequences for those OTUs. <strong><font color=#00961E>MMinte</font></strong>
+            will then perform a series of sequential tasks to assess the kind of ecological interactions
+            that are potentially occurring between each pair of members in the community. The final output
+            is a network diagram representing these interactions.
+        </p>
+        <p>
+            <strong><font color=#00961E>MMinte</font></strong> is divided into six widgets with specific
+            functions that may be used individually or sequentially. This modularity allows the user to
+            have better control of the workflow.
+        </p>
+        <h2>The full description</h2>
+        <p>
+            <strong><font color=#00961E>MMinte</font></strong> (pronounced /`minti/) is a set of widgets
+            that allows users to explore the different kinds of pairwise interactions (positive or negative)
+            that occur between members of a microbial community under different nutritional conditions.
+            These interactions are predicted for the taxonomic units of interest from as little information
+            as the 16S dRNA sequences commonly obtained in studies describing the species membership of
+            microbial communities. Our application is composed of six widgets that run sequentially, with
+            each widget using the output of prior widgets as its input for the
+            analysis. While <strong><font color=#00961E>MMinte</font></strong> may be run as a streamlined
+            pipeline, due to its compartmentalized nature, the user is given the ability to better control
+            the full analysis. The user may choose to start the application at any of the six widgets, as
+            long as the data provided has the correct structure. The user also has access to the output
+            files of each widget. This allows the user to verify the quality of the data produced at each
+            step of the analysis, as well as explore it with alternative tools.
+        </p>
+        <img class="flow" src="/image2" alt="MMinte flow">
+        <p>
+            The widgets that make up <strong><font color=#00961E>MMinte</font></strong>, and the particular
+            analysis they perform are the following:
+            <ul>
+                <li>
+                    <ins>Widget 1</ins> - Using information about pairs of operational taxonomic units
+                    (OTUs) that are associated to some degree and a list of 16S rDNA sequences for the
+                    OTUs in a particular community, a file is created containing only the sequences for
+                    representative OTUs significant to the analyses.
+                </li><br>
+                <li>
+                    <ins>Widget 2</ins> - The representative OTUs are identified and assigned a genome
+                    ID using BLAST and a local database containing the 16S rDNA sequences of species
+                    with whole genome sequences.
+                </li><br>
+                <li>
+                    <ins>Widget 3</ins> - Metabolic models for each genome ID are reconstructed and
+                    gap filled using the ModelSEED web service and downloaded to the user's local machine.
+                </li><br>
+                <li>
+                    <ins>Widget 4</ins> - Metabolic models of two species communities are created
+                    using COBRA Toolbox for the python computational framework (COBRApy).
+                </li><br>
+                <li>
+                    <ins>Widget 5</ins> - Under defined nutritional conditions, the growth rates of
+                    each species in isolation and when in the presence of another species in the
+                    community are estimated. The kinds of interactions occurring between the pairs
+                    of species on the nutritional conditions are predicted. The interactions are
+                    either positive (commensalism, mutualism) or negative (parasitism, amensalism,
+                    competition).
+                </li><br>
+                <li>
+                    <ins>Widget 6</ins> - A network is plotted with D3.js using the initial information
+                    of associations between the pairs of OTUs provided by the used, and the kinds of
+                    interactions predicted to be occurring.
+                </li><br>
+            </ul>
+        </p>
+        <h2>Tracking the progress of the analysis</h2>
+        <p>
+            Note that if you want to track the progress of the analysis you can consult the log files.
+            To do this, navigate to the folder shown in the first line of output from launchMMinte. As the
+            analysis is ongoing the "mminte_error_log.txt" file is updated. If you type "tail -f mminte_error_log.txt"
+            in the terminal, you can see the progression. You can find more information in the README file.
+        </p>
+        <h2>About MMinte</h2>
+        <p>
+            <strong><font color=#00961E>MMinte</font></strong> was developed by scientists and developers
+            at the Center for Individualized Medicine at the Mayo Clinic and Harvard Medical School.
+        </p>
+    	<p>
+            Please note that <strong><font color=#00961E>MMinte</font></strong> is still being actively
+            developed. If you want us to let you know of updates or have suggestions, just shoot us an email.
+        </p>
+        <p class="contact">
+            <a href="mailto:microbialmetabolicinteractions@gmail.com">Send an email</a> to
+            <strong><font color=#00961E>MMinte</font></strong>'s awesome team!
+        </p>
+    </div>
+</body>

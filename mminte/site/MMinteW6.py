@@ -1,228 +1,123 @@
-from spyre import server
 from pkg_resources import resource_filename
-from widget7 import nodes, links, createJSONforD3
-import os
+from os.path import join, exists
+from os import makedirs
 import webbrowser
 import cherrypy
 
-from .mminte_widget import css_filename
+from mminte import make_d3_source, read_similarity_file, read_correlation_file, read_growth_rates_file
+from mminte.site import MMinteApp
 
 
-class custom_root(server.Root):
-    @cherrypy.expose
-    def widget6_out(self):
-        with open(resource_filename(__name__, 'index.html')) as data:
-            return data.read()
-
-    @cherrypy.expose
-    def d3(self):
-        with open(resource_filename(__name__, 'd3.v3.min.js')) as data:
-            return data.read()
-
-    @cherrypy.expose
-    def data4plot_json(self):
-        with open(resource_filename(__name__, 'data4plot_json')) as data:
-            return data.read()
-
-
-server.Root = custom_root
-
-
-class Widget6(server.App):
+class Widget6(MMinteApp):
+    """ Widget 6 application for spyre """
     title = 'Widget 6'
 
-    inputs = [
-        {"type": "text",
-         "key": 'text24',
-         "label": '<font size=4pt>And last, but not least, we will plot a network where the nodes '
-                  'represent the different OTUs and the length and thickness of links represent the '
-                  'correlations in your initial files. The color of the links will represent the kind '
-                  'of interaction predicted between those two OTUs by MMinte. We will do this using '
-                  '<a href="https://d3js.org/">D3</a>, a neat "JavaScript library for manipulating '
-                  'documents based on data".  </font> <br> <br>',
-         "value": "Yes or No"},
+    def __init__(self):
+        self.inputs = [
+            {"type": "text",
+             "key": 'analysis_folder',
+             "label": 'And last, but not least, in this widget we are going to plot a network where the nodes '
+                      'represent the different OTUs and the length and thickness of links represent the '
+                      'correlations in your initial files. The color of the links represents the kind '
+                      'of interaction predicted between those two OTUs by MMinte. We will do this using '
+                      '<a href="https://d3js.org/">D3</a>, a neat "JavaScript library for manipulating '
+                      'documents based on data".<br><br>Enter the location of the folder '
+                      'for storing the files for this analysis',
+             "value": self.getRoot().analysisFolder()},
 
-        {"type": "dropdown",
-         "key": "dropdown2",
-         "label": "<font size=3pt> Do you want the network to be plotted in this browser tab or in a new one </font>",
-         "options": [{"label": "This one", "value": "Current"},
-                     {"label": "New one", "value": "New"}],
-         "value": 'Current'},
+            {"type": "dropdown",
+             "key": "browser_tab",
+             "label": "Do you want the network to be plotted in this browser tab or in a new tab",
+             "options": [{"label": "This tab", "value": "Current"},
+                         {"label": "New tab", "value": "New"}],
+             "value": 'Current'},
 
-        {"type": "text",
-         "key": "text25",
-         "label": "<font size=3pt> Tell me which file has the information about the percent similarity "
-                  "between the OTUs analyzed and the genome they were matched with (one of the outputs "
-                  "of Widget 2) </font>",
-         "value": "Enter the path to the percent similarity file here"},
+            {"type": "text",
+             "key": "correlation_file",
+             "label": "Enter the name of the file with the information about the correlations between associated OTUs",
+             "value": resource_filename('mminte', "test/data/correlation.txt")},
 
-        {"type": "text",
-         "key": "text26",
-         "label": "<font size=3pt> Tell me which file has the information about the <b>correlations</b> "
-                  "between pairs of <b>OTUs</b>.</font>",
-         "value": "Enter the path to the correlations file here"},
+            {"type": "text",
+             "key": "similarity_file",
+             "label": "Enter the name of the file with percent similarity information",
+             "value": "similarity.csv"},
 
-        {"type": "text",
-         "key": "text27",
-         "label": "<font size=3pt> Tell me which file has the information about the type of interactions "
-                  "occurring between pairs of <b> species </b> </font>",
-         "value": "Enter the path to the interactions table here"}
-    ]
+            {"type": "text",
+             "key": "growth_rates_file",
+             "label": "Enter the name of the file with growth rates information",
+             "value": "growth_rates.csv"}
+        ]
 
-    controls = [
-        {"type": "button",
-         "label": "Run Widget 6",
-         "id": "run_widget"}
-    ]
+        self.controls = [
+            {"type": "button",
+             "label": "Run Widget 6",
+             "id": "run_widget"}
+        ]
 
-    outputs = [
-        {"type": "html",
-         "id": "results",
-         "control_id": "run_widget",
-         "tab": "Results",
-         "on_page_load": False}
-    ]
+        self.outputs = [
+            {"type": "html",
+             "id": "results",
+             "control_id": "run_widget",
+             "tab": "Results",
+             "on_page_load": False}
+        ]
 
-    tabs = ["Results"]
-
-    def getCustomCSS(self):
-        with open(resource_filename(__name__, css_filename)) as style:
-            return style.read() + '''\n .right-panel{width:65%;margin: 1em}'''
+        self.tabs = ["Results"]
 
     def getHTML(self, params):
+        """ Run Widget 6 and generate HTML output for Results tab. """
 
-        if params['text24'] == 'Yes' or params['text1'] == "yes":
-            inNodes = '../supportFiles/exampleRun/userOutput/similFile.txt'
-            inLinks = '../supportFiles/exampleRun/userFiles/corrs.txt'
-            inInter = '../supportFiles/exampleRun/userOutput/interactionsTable.txt'
+        # Validate input parameters.
+        cherrypy.log('Widget 6 input parameters: {0}'.format(params))
+        if not exists(params['analysis_folder']):
+            try:
+                makedirs(params['analysis_folder'])
+            except Exception as e:
+                cherrypy.log('Widget 6: Error creating folder "{0}" for analysis files: {1}'
+                             .format(params['analysis_folder'], e))
+                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+        growth_rates_file = join(params['analysis_folder'], params['growth_rates_file'])
+        if not exists(growth_rates_file):
+            cherrypy.log('Widget 6: growth rates file "{0}" was not found'.format(growth_rates_file))
+            return 'Sorry, growth rates file "{0}" was not found. Make sure the path to the file is correct.' \
+                .format(growth_rates_file)
+        growth_rates = read_growth_rates_file(growth_rates_file)
+        similarity_file = join(params['analysis_folder'], params['similarity_file'])
+        if not exists(similarity_file):
+            cherrypy.log('Widget 6: similarity file "{0}" was not found'.format(similarity_file))
+            return 'Sorry, growth rates file "{0}" was not found. Make sure the path to the file is correct.' \
+                .format(similarity_file)
+        similarity = read_similarity_file(similarity_file)
+        if not exists(params['correlation_file']):
+            cherrypy.log('Widget 6: similarity file "{0}" was not found'.format(similarity_file))
+            return 'Sorry, growth rates file "{0}" was not found. Make sure the path to the file is correct.' \
+                .format(similarity_file)
+        correlation = read_correlation_file(params['correlation_file'])
 
+        self.getRoot().analysisFolder(params['analysis_folder'])
 
-        else:
-            inNodes = params['text25']
-            inLinks = params['text26']
-            inInter = params['text27']
+        # Generate data for plot of interaction network.
+        make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
 
-        node = nodes(inNodes)
-        link = links(inNodes, inLinks, inInter)
+        # Generate the output for the Results tab.
+        text = ["The plot with the network of interactions between your organisms is shown below or"
+                "on a new tab.<br>The shading of the nodes indicates how close the sequence of the "
+                "OTU is to the sequence of the genome. The darker the node, the higher the similarity.<br"
+                "The length and thickness of the links reflect the association values on the initial "
+                "file you provided. The shorter and thicker the link, the higher the association value.<br"
+                "The colors of the links reflect the kind of interaction. The red, green and grey "
+                "represent negative, positive and no interaction, respectively.<br>"
+                "<a href='http://d3js.org/'>D3 is awesome</a>! If you mouse over the nodes, you get "
+                "the id of the OTU, and if you click a node and drag it, the network will follow it."]
 
-        createJSONforD3(node, link)
-
-        ROOT_DIR = os.path.dirname(os.path.realpath('index.html'))
-        full_path = ROOT_DIR + '/index.html'
-
-        script = '''<style>
-
-.node {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-.link {
-  stroke: #999;
-  stroke-opacity: .6;
-}
-
-</style>
-
-<script src="d3"></script> <!-- changed this from the source in the website to be local source -->
-<script window.onload>
-
-
-    height = 800;
-
-var colorNodes = d3.scale.linear()
-      .domain([1,2,3,4,5,6])
-      .range(["#3d3d3d","4a4a4a","565656", "#636363", "#707070","#d9d9d9"]); <!-- colors for nodes -->
-
-
-var colorLinks = d3.scale.linear()
-    .domain([2,1,0])
-    .range(["#2ca02c","#d62728","#c7c7c7"]); <!-- colors for links, green, red, grey -->
-
-
-
-
-
-document.onload=d3.json("data4plot_json", function(error, graph) {
-  var width=document.getElementById('some_html').offsetWidth;
-var force = d3.layout.force()
-    .charge(-150)
-    .size([width, height])
-   	.linkDistance(function(link) {
-       return link.value*20;
-    });
-  var svg = d3.select("body").select("#some_html").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-  if (error) throw error;
-
-
-  force
-      .nodes(graph.nodes)
-      .links(graph.links)
-      .start();
-
-
-
-  var link = svg.selectAll(".link")
-      .data(graph.links)
-      .enter().append("line")
-      .attr("class", "link")
-      .style("stroke-width", function(d) { return (6*1/d.value); })
-      .style("stroke", function(d) {return colorLinks(d.interaction);});
-
-  var node = svg.selectAll(".node")
-      .data(graph.nodes)
-    .enter().append("circle")
-      .attr("class", "node")
-      .attr("r", 5)
-      .style("fill", function(d) { return colorNodes(d.group); })
-      .call(force.drag);
-
-  node.append("title")
-      .text(function(d) { return d.name; });
-
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
-
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
-  });
-});
-
-</script>
-'''
-        head = ["The plot with the network of interactions between your favorite organisms is shown on a new tab."]
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append(
-            "The shading of the nodes indicates how close the sequence of the OTU is to the sequence of the genome. The darker the node, the higher the similarity.")
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append(
-            "The length and thickness of the links reflect the association values on the initial file you provided. The shorter and thicker the link, the higher the association value.")
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append(
-            "The colors of the links reflect the kind of interaction. The red, green and grey represent negative, positive and no interaction, respectively.")
-        head.append('<br>')
-        head.append('<br>')
-        head.append('<br>')
-        head.append(
-            '<a href="http://d3js.org/" >D3 is awesome</a>! If you mouse over the nodes, you get the id of the OTU, and if you click a node and drag it, the network will follow it.')
-
-        if params['dropdown2'] == 'Current':
-            head.append(script)
+        if params['browser_tab'] == 'Current':
+            with open(resource_filename(__name__, 'static/plot.html')) as page:
+                text.append(page.read())
         else:
             webbrowser.open('http://localhost:8080/widget6_out', new=1)
 
-        return head
+        return text
 
 
 if __name__ == '__main__':

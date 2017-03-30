@@ -6,14 +6,13 @@ from os.path import join
 from spyre import server
 import cherrypy
 
-from mminte.site import Index
+from mminte.site import Intro
 from mminte.site import Widget1
 from mminte.site import Widget2
 from mminte.site import Widget3
 from mminte.site import Widget4
 from mminte.site import Widget5
 from mminte.site import Widget6
-from mminte.site import Widget7
 from mminte.site import WidgetRunAll
 
 
@@ -28,13 +27,14 @@ if __name__ == '__main__':
     # Set the cherrypy configuration.
     cherrypy.config.update({
         "response.timeout": 1000000,
-        'log.access_file': join(args.log_folder, 'access_file.txt'),
-        'log.error_file': join(args.log_folder, 'error_file.txt'),
+        'log.access_file': join(args.log_folder, 'mminte_access_log.txt'),
+        'log.error_file': join(args.log_folder, 'mminte_error_log.txt'),
         'log.screen': True
     })
+    print('Logging to "{0}" folder'.format(args.log_folder))
 
     # Create the MMinte website.
-    site = server.Site(Index)
+    site = server.Site(Intro)
     site.addApp(Widget1, '/app1')
     site.addApp(Widget2, '/app2')
     site.addApp(Widget3, '/app3')
