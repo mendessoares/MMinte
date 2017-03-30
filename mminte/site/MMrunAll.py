@@ -10,11 +10,13 @@ from mminte import get_unique_otu_sequences, search, write_similarity_file, crea
     read_correlation_file, make_d3_source
 from mminte.site import MMinteApp, MMinteRoot
 
-# Set server cherrypy Root to the custom one for MMinte.
+# Set custom cherrypy Root.
 server.Root = MMinteRoot
 
 
 class WidgetRunAll(MMinteApp):
+    """ Widget Run All application for spyre """
+
     title = 'Run All'
 
     def __init__(self):
