@@ -1,14 +1,17 @@
 from pkg_resources import resource_filename
-from os import listdir, makedirs
-from os.path import isfile, join, exists
-import webbrowser
-
+from os import makedirs
+from os.path import join, exists
 import cherrypy
+from spyre import server
+import webbrowser
 
 from mminte import get_unique_otu_sequences, search, write_similarity_file, create_species_models, \
     get_all_pairs, create_interaction_models, read_diet_file, calculate_growth_rates, write_growth_rates_file, \
     read_correlation_file, make_d3_source
-from mminte.site import MMinteApp
+from mminte.site import MMinteApp, MMinteRoot
+
+# Set server cherrypy Root to the custom one for MMinte.
+server.Root = MMinteRoot
 
 
 class WidgetRunAll(MMinteApp):
@@ -40,11 +43,12 @@ class WidgetRunAll(MMinteApp):
             {"type": "text",
              "key": "diet_file",
              "label": "You can determine which kind of metabolites are available for the "
-                      "organisms by choosing a diet. In the ms_complete100 diet, over 400 metabolites are available "
-                      "to the community, with a flux for the import reactions of 100 mmol/gDW/hr. The ms_complete10 diet "
-                      "contains the same metabolites, but the reaction fluxes are 10 mmol/gDW/hr, and in the "
-                      "ms_complete1 diet the fluxes are 1 mmol/gDW/hr. Enter the location of the file with the"
-                      "metabolites and bounds for the diet",
+                      "organisms by choosing a diet. In the ms_complete100 diet, over "
+                      "400 metabolites are available to the community, with a flux for the "
+                      "import reactions of 100 mmol/gDW/hr. The ms_complete10 diet contains "
+                      "the same metabolites, but the reaction fluxes are 10 mmol/gDW/hr, and "
+                      "in the ms_complete1 diet the fluxes are 1 mmol/gDW/hr. Enter the location "
+                      "of the file with the metabolites and bounds for the diet",
              "value": resource_filename("mminte", "test/data/ms_complete100.txt")},
 
             {"type": "dropdown",
@@ -62,10 +66,10 @@ class WidgetRunAll(MMinteApp):
         ]
 
         self.outputs = [
-            {"type":"html",
-             "id":"some_html",
-             "control_id":"run_widget",
-             "tab":"Results",
+            {"type": "html",
+             "id": "results",
+             "control_id": "run_widget",
+             "tab": "Results",
              "on_page_load": False}
         ]
 
@@ -75,52 +79,56 @@ class WidgetRunAll(MMinteApp):
         """ Run Widget All and generate HTML output for Results tab. """
 
         # Validate input parameters.
-        cherrypy.log('Widget All input parameters: {0}'.format(params))
+        cherrypy.log('Widget A input parameters: {0}'.format(params))
         if not exists(params['correlation_file']):
-            cherrypy.log('Widget All: correlation file "{0}" was not found'.format(params['correlation_file']))
+            cherrypy.log('Widget A: correlation file "{0}" was not found'.format(params['correlation_file']))
             return 'Sorry, correlation file "{0}" was not found. Make sure the path to the file is correct.' \
                    .format(params['correlation_file'])
         if not exists(params['representative_otu_file']):
-            cherrypy.log('Widget All: representative OTU file "{0}" was not found'
+            cherrypy.log('Widget A: representative OTU file "{0}" was not found'
                          .format(params['representative_otu_file']))
             return 'Sorry, representative OTU file "{0}" was not found. Make sure the path to the file is correct.' \
                    .format(params['representative_otu_file'])
+        if not exists(params['diet_file']):
+            cherrypy.log('Widget A: diet file "{0}" was not found'.format(params['diet_file']))
+            return 'Sorry, diet file "{0}" was not found. Make sure the path to the file is correct.' \
+                   .format(params['diet_file'])
         if not exists(params['analysis_folder']):
             try:
                 makedirs(params['analysis_folder'])
             except Exception as e:
-                cherrypy.log('Widget All: Error creating folder "{0}" for analysis files: {1}'
+                cherrypy.log('Widget A: Error creating folder "{0}" for analysis files: {1}'
                              .format(params['analysis_folder'], e))
-                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
-                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+                return 'Sorry, something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br><br>Exception: {1}'.format(params['analysis_folder'], e)
 
         # Widget 1 - Get the unique OTU sequences.
         try:
-            cherrypy.log('Widget All: Started getting unique OTU sequences')
+            cherrypy.log('Widget A1: Started getting unique OTU sequences')
             unique_otus_file = join(params['analysis_folder'], 'unique_otus.fasta')
             get_unique_otu_sequences(params['correlation_file'], params['representative_otu_file'],
                                      unique_otus_file)
-            cherrypy.log("Widget All: Finished getting unique OTU sequences")
+            cherrypy.log("Widget A1: Finished getting unique OTU sequences")
 
         except Exception as e:
-            cherrypy.log('Widget All: Error getting unique OTU sequences: {0}'.format(e))
-            return "Sorry something went wrong. Make sure the paths to your files are correct.<br>" \
+            cherrypy.log('Widget A1: Error getting unique OTU sequences: {0}'.format(e))
+            return "Sorry, something went wrong. Make sure the paths to your files are correct.<br><br>" \
                    "Exception: {0}.".format(e)
 
         # Widget 2 - Run blast search to find matching bacterial species.
         try:
-            cherrypy.log('Widget All: Started blast search for matching bacterial species')
+            cherrypy.log('Widget A2: Started blast search for matching bacterial species')
             blast_output_file = join(params['analysis_folder'], 'blast.txt')
             genome_ids, similarity = search(unique_otus_file, blast_output_file)
-            cherrypy.log("Widget All: Finished running blast search")
             with open(join(params['analysis_folder'], 'genome_ids.txt'), 'w') as handle:
                 handle.write('\n'.join(genome_ids))
             write_similarity_file(similarity, join(params['analysis_folder'], 'similarity.csv'))
+            cherrypy.log("Widget A2: Finished blast search")
 
         except Exception as e:
-            cherrypy.log("Widget All: Error running blast search: {0}".format(e))
-            return "Sorry something went wrong. Make sure the paths to your files are correct and " \
-                   "that the correct version of blast is installed.<br>Exception: {0}".format(e)
+            cherrypy.log("Widget A2: Error running blast search: {0}".format(e))
+            return "Sorry, something went wrong. Make sure the paths to your files are correct and " \
+                   "that the correct version of blast is installed.<br><br>Exception: {0}".format(e)
 
         # Widget 3 - Create single species models using ModelSEED.
         model_folder = join(params['analysis_folder'], 'single_models')
@@ -128,20 +136,21 @@ class WidgetRunAll(MMinteApp):
             try:
                 makedirs(model_folder)
             except Exception as e:
-                cherrypy.log('Widget 3: Error creating folder "{0}" for model files: {1}'
+                cherrypy.log('Widget A3: Error creating folder "{0}" for model files: {1}'
                              .format(params['model_folder'], e))
                 return 'Sorry something went wrong creating the folder "{0}" for the model files. Make sure ' \
-                       'the path to the folder is correct.<br>Exception: {1}'.format(params['model_folder'], e)
+                       'the path to the folder is correct.<br><br>Exception: {1}'.format(params['model_folder'], e)
         try:
-            cherrypy.log('Widget All: Started creating models for {0} genomes'.format(len(genome_ids)))
+            cherrypy.log('Widget A3: Started creating models for {0} genomes'.format(len(genome_ids)))
             single_filenames = create_species_models(genome_ids, model_folder)
-            cherrypy.log('Widget All: Created and downloaded {0} models'.format(len(single_filenames)))
             output_filename = join(params['analysis_folder'], 'single_model_filenames.txt')
             with open(output_filename, 'w') as handle:
                 handle.write('\n'.join(single_filenames))
+            cherrypy.log('Widget A3: Finished creating and downloading {0} models'.format(len(single_filenames)))
+
         except Exception as e:
-            cherrypy.log('Widget All: Error creating models: {0}'.format(e))
-            return "Sorry something went wrong creating metabolic models using ModelSEED.<br>" \
+            cherrypy.log('Widget A3: Error creating models: {0}'.format(e))
+            return "Sorry, something went wrong creating metabolic models using ModelSEED.<br><br>" \
                    "Exception: {0}".format(e)
 
         # Widget 4 - Create two species community models.
@@ -150,51 +159,61 @@ class WidgetRunAll(MMinteApp):
             try:
                 makedirs(pair_model_folder)
             except Exception as e:
-                cherrypy.log('Widget All: We were unable to create folder "{0}" for community model files'
+                cherrypy.log('Widget A4: We were unable to create folder "{0}" for community model files'
                              .format(pair_model_folder))
-                return 'Sorry something went wrong creating the folder "{0}" for the community model files. ' \
-                       'Make sure the path to the folder is correct.<br>Exception: {1}' \
+                return 'Sorry, something went wrong creating the folder "{0}" for the community model files. ' \
+                       'Make sure the path to the folder is correct.<br><br>Exception: {1}' \
                        .format(pair_model_folder, e)
         try:
             pairs = get_all_pairs(single_filenames)
-            cherrypy.log('Widget All: Started creating community models from {0} pairs of single species models'
+            cherrypy.log('Widget A4: Started creating community models from {0} pairs of single species models'
                          .format(len(pairs)))
             pair_filenames = create_interaction_models(pairs, output_folder=pair_model_folder)
-            cherrypy.log("Widget All: Finished creating {0} community models".format(len(pair_filenames)))
             output_filename = join(params['analysis_folder'], 'pair_model_filenames.txt')
             with open(output_filename, 'w') as handle:
                 handle.write('\n'.join(pair_filenames))
+            cherrypy.log("Widget A4: Finished creating {0} community models".format(len(pair_filenames)))
+
         except Exception as e:
-            cherrypy.log("Widget All: Error creating community models: {0}".format(e))
-            return "Sorry something's wrong. Make sure the path to your file is correct and " \
-                   "that the Python package cobrapy is loaded into your system.<br>Exception: {0}".format(e)
+            cherrypy.log("Widget A4: Error creating community models: {0}".format(e))
+            return "Sorry, something went wrong. Make sure the path to your file is correct and " \
+                   "that the Python package cobrapy is loaded into your system.<br><br>Exception: {0}".format(e)
 
         # Widget 5 - Calculate growth rates for the two species models.
         try:
-            cherrypy.log("Widget All: Starting the growth rate calculations for {0} pair models"
+            cherrypy.log("Widget A5: Started calculating growth rates for {0} pair models"
                          .format(len(pair_filenames)))
             medium = read_diet_file(params['diet_file'])
             growth_rates = calculate_growth_rates(pair_filenames, medium)
-            cherrypy.log("Widget All: Finished calculating the growth rates of the species")
             write_growth_rates_file(growth_rates, join(params['analysis_folder'], 'growth_rates.csv'))
+            cherrypy.log("Widget A5: Finished calculating the growth rates")
 
         except Exception as e:
-            cherrypy.log("Widget All: Error calculating growth rates: {0}".format(e))
-            return "Sorry something's wrong. Make sure the path to your file is correct.<br>Exception: {0}".format(e)
+            cherrypy.log("Widget A5: Error calculating growth rates: {0}".format(e))
+            return "Sorry, something went wrong. Make sure the path to your file is correct.<br><br>" \
+                   "Exception: {0}".format(e)
 
         # Widget 6 - Generate data for plot of interaction network.
-        self.getRoot().analysisFolder(params['analysis_folder'])
-        correlation = read_correlation_file(params['correlation_file'])
-        make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
+        try:
+            cherrypy.log('Widget A6: Started generating data for plot of interaction network')
+            self.getRoot().analysisFolder(params['analysis_folder'])
+            correlation = read_correlation_file(params['correlation_file'])
+            make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
+            cherrypy.log('Widget A6: Finished generating data for plot of interaction network')
+
+        except Exception as e:
+            cherrypy.log('Widget A6: Error generating data for plot of network: {0}'.format(e))
+            return 'Sorry, something went wrong. Make sure the locations of your files are correct.<br><br>' \
+                   'Exception: {0}'.format(e)
 
         # Generate the output for the Results tab.
-        text = ["The plot with the network of interactions between your organisms is shown below or"
-                "on a new tab.<br>The shading of the nodes indicates how close the sequence of the "
-                "OTU is to the sequence of the genome. The darker the node, the higher the similarity.<br"
+        text = ["The plot with the network of interactions between your organisms is shown below or "
+                "on a new tab.<br><br>The shading of the nodes indicates how close the sequence of the "
+                "OTU is to the sequence of the genome. The darker the node, the higher the similarity.<br><br>"
                 "The length and thickness of the links reflect the association values on the initial "
-                "file you provided. The shorter and thicker the link, the higher the association value.<br"
+                "file you provided. The shorter and thicker the link, the higher the association value.<br><br>"
                 "The colors of the links reflect the kind of interaction. The red, green and grey "
-                "represent negative, positive and no interaction, respectively.<br>"
+                "represent negative, positive and no interaction, respectively.<br><br>"
                 "<a href='http://d3js.org/'>D3 is awesome</a>! If you mouse over the nodes, you get "
                 "the id of the OTU, and if you click a node and drag it, the network will follow it."]
 
@@ -208,5 +227,6 @@ class WidgetRunAll(MMinteApp):
 
 
 if __name__ == '__main__':
+    cherrypy.config.update({"response.timeout": 1000000})
     app = WidgetRunAll()
     app.launch()
