@@ -1,10 +1,14 @@
 from pkg_resources import resource_filename
 from os import makedirs
 from os.path import join, exists
+from spyre import server
 import cherrypy
 
-from mminte import create_interaction_models, get_all_pairs
-from mminte.site import MMinteApp
+from mminte import create_interaction_models, get_all_pairs, read_similarity_file, read_correlation_file
+from mminte.site import MMinteApp, MMinteRoot
+
+# Set custom cherrypy Root.
+server.Root = MMinteRoot
 
 
 class Widget4(MMinteApp):
@@ -52,7 +56,7 @@ class Widget4(MMinteApp):
             {"type": "text",
              "key": "similarity_file",
              "label": 'If you selected "Subset pairs", enter the name of the file with percent similarity information',
-             "value": "similarity.txt"},
+             "value": "similarity.csv"},
 
             {"type": "text",
              "key": "model_folder",
@@ -97,8 +101,18 @@ class Widget4(MMinteApp):
             except Exception as e:
                 cherrypy.log('Widget 4: Error creating folder "{0}" for analysis files: {1}'
                              .format(params['analysis_folder'], e))
-                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
-                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+                return 'Sorry, something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br><br>Exception: {1}'.format(params['analysis_folder'], e)
+        community_folder = join(params['analysis_folder'], params['community_folder'])
+        if not exists(community_folder):
+            try:
+                makedirs(community_folder)
+            except Exception as e:
+                cherrypy.log('Widget 4: We were unable to create folder "{0}" for community model files'
+                             .format(community_folder))
+                return 'Sorry, something went wrong creating the folder "{0}" for the community model files. ' \
+                       'Make sure the path to the folder is correct.<br><br>Exception: {1}' \
+                       .format(community_folder, e)
         if params['pair_input_type'] == 'all':
             model_list_file = join(params['analysis_folder'], params['single_models_file'])
             if not exists(model_list_file):
@@ -125,45 +139,39 @@ class Widget4(MMinteApp):
             pairs = [(fields[0], fields[1]) for fields in pair_list]
             cherrypy.log('Widget 4: Found {0} pairs in pair list file'.format(len(pairs)))
         else:
-            # Need to move over code from subset pairs. Still not convinced that it is different than going
-            # through the standard workflow.
-            with open(join(params['analysis_folder'], params['similarity_file']), 'r') as handle:
-                similarity = [line.strip().split() for line in handle]
-            with open(params['correlation_file'], 'r') as handle:
-                correlation = [line.strip().split() for line in handle]
+            similarity_file = join(params['analysis_folder'], params['similarity_file'])
+            if not exists(similarity_file):
+                cherrypy.log('Widget 4: Similarity file "{0}" was not found'.format(similarity_file))
+                return 'Sorry, similarity file "{0}" was not found. Make sure the path to the file is correct.' \
+                       .format(similarity_file)
+            if not exists(params['correlation_file']):
+                cherrypy.log('Widget 6: correlation file "{0}" was not found'.format(params['correlation_file']))
+                return 'Sorry, correlation file "{0}" was not found. Make sure the path to the file is correct.' \
+                    .format(params['correlation_file'])
+            similarity = read_similarity_file(similarity_file)
+            correlation = read_correlation_file(params['correlation_file'])
 
-            source_models = list()
-            for c in correlation:
-                for s in similarity:
-                    if c[0] == s[0] or c[1] == s[0]:
-                        source_models.append(join(params['analysis_folder'], params['model_folder'],
-                                                  '{0}.json'.format(s[1])))
-            source_models = list(set(source_models))
-            pairs = get_all_pairs(source_models)
-        community_folder = join(params['analysis_folder'], params['community_folder'])
-        if not exists(community_folder):
-            try:
-                makedirs(community_folder)
-            except Exception as e:
-                cherrypy.log('Widget 4: We were unable to create folder "{0}" for community model files'
-                             .format(community_folder))
-                return 'Sorry something went wrong creating the folder "{0}" for the community model files. ' \
-                       'Make sure the path to the folder is correct.<br>Exception: {1}' \
-                       .format(community_folder, e)
+            pairs = list()
+            for corr in correlation:
+                one = similarity.loc[similarity['OTU_ID'] == corr[0]].iloc[0]['GENOME_ID']
+                two = similarity.loc[similarity['OTU_ID'] == corr[1]].iloc[0]['GENOME_ID']
+                pairs.append((join(params['analysis_folder'], params['model_folder'], '{0}.json'.format(one)),
+                              join(params['analysis_folder'], params['model_folder'], '{0}.json'.format(two))))
 
         # Create two species community models.
         try:
             cherrypy.log('Widget 4: Started creating community models from {0} pairs of single species models'
                          .format(len(pairs)))
             model_filenames = create_interaction_models(pairs, output_folder=community_folder)
-            cherrypy.log("Widget 4: Finished creating {0} community models".format(len(model_filenames)))
             output_filename = join(params['analysis_folder'], params['pair_models_file'])
             with open(output_filename, 'w') as handle:
                 handle.write('\n'.join(model_filenames))
+            cherrypy.log("Widget 4: Finished creating {0} community models".format(len(model_filenames)))
+
         except Exception as e:
             cherrypy.log("Widget 4: Error creating community models: {0}".format(e))
             return "Sorry something's wrong. Make sure the path to your file is correct and " \
-                   "that the Python package cobrapy is loaded into your system.<br>Exception: {0}".format(e)
+                   "that the Python package cobrapy is loaded into your system.<br><br>Exception: {0}".format(e)
 
         # Generate the output for the Results tab.
         return 'We created {0} two species community models. In the next widget, we will use them ' \
@@ -173,5 +181,6 @@ class Widget4(MMinteApp):
 
 
 if __name__ == '__main__':
+    cherrypy.config.update({"response.timeout": 1000000})
     app = Widget4()
     app.launch()
