@@ -1,8 +1,8 @@
 from pkg_resources import resource_filename
 from os import makedirs
 from os.path import join, exists
-import cherrypy
 from spyre import server
+import cherrypy
 import webbrowser
 
 from mminte import get_unique_otu_sequences, search, write_similarity_file, create_species_models, \
@@ -217,7 +217,7 @@ class WidgetRunAll(MMinteApp):
                 "The colors of the links reflect the kind of interaction. The red, green and grey "
                 "represent negative, positive and no interaction, respectively.<br><br>"
                 "<a href='http://d3js.org/'>D3 is awesome</a>! If you mouse over the nodes, you get "
-                "the id of the OTU, and if you click a node and drag it, the network will follow it."]
+                "the ID of the OTU, and if you click a node and drag it, the network will follow it."]
 
         if params['browser_tab'] == 'Current':
             with open(resource_filename(__name__, 'static/plot.html')) as page:

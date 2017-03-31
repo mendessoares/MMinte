@@ -1,10 +1,14 @@
 from pkg_resources import resource_filename
 from os.path import exists, join
 from os import makedirs
+from spyre import server
 import cherrypy
 
 from mminte import get_unique_otu_sequences
-from mminte.site import MMinteApp
+from mminte.site import MMinteApp, MMinteRoot
+
+# Set custom cherrypy Root.
+server.Root = MMinteRoot
 
 
 class Widget1(MMinteApp):
@@ -77,7 +81,7 @@ class Widget1(MMinteApp):
                 cherrypy.log('Widget 1: Error creating folder "{0}" for analysis files: {1}'
                              .format(params['analysis_folder'], e))
                 return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
-                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+                       'the path to the file is correct.<br><br>Exception: {1}'.format(params['analysis_folder'], e)
 
         # Get the unique OTU sequences.
         try:
@@ -87,7 +91,7 @@ class Widget1(MMinteApp):
             cherrypy.log("Widget 1: Finished getting unique OTU sequences")
         except Exception as e:
             cherrypy.log('Widget 1: Error getting unique OTU sequences: {0}'.format(e))
-            return "Sorry something went wrong. Make sure the paths to your files are correct.<br>" \
+            return "Sorry, something went wrong. Make sure the paths to your files are correct.<br><br>" \
                    "Exception: {0}.".format(e)
 
         # Generate the output for the Results tab.

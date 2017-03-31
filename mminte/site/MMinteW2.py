@@ -1,9 +1,13 @@
 from os.path import exists, join
 from os import makedirs
+from spyre import server
 import cherrypy
 
 from mminte import search, write_similarity_file
-from mminte.site import MMinteApp
+from mminte.site import MMinteApp, MMinteRoot
+
+# Set custom cherrypy Root.
+server.Root = MMinteRoot
 
 
 class Widget2(MMinteApp):
@@ -72,8 +76,8 @@ class Widget2(MMinteApp):
             except Exception as e:
                 cherrypy.log('Widget 2: Error creating folder "{0}" for analysis files: {1}'
                              .format(params['analysis_folder'], e))
-                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
-                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+                return 'Sorry, something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br><br>Exception: {1}'.format(params['analysis_folder'], e)
         unique_otus_file = join(params['analysis_folder'], params['unique_otus_file'])
         if not exists(unique_otus_file):
             cherrypy.log('Widget 2: unique OTUs file "{0}" was not found'.format(unique_otus_file))
@@ -85,15 +89,15 @@ class Widget2(MMinteApp):
             cherrypy.log('Widget 2: Started blast search for matching bacterial species')
             genome_ids, similarity = search(unique_otus_file,
                                             join(params['analysis_folder'], params['blast_output_file']))
-            cherrypy.log("Widget 2: Finished running blast search")
             with open(join(params['analysis_folder'], params['genome_ids_file']), 'w') as handle:
                 handle.write('\n'.join(genome_ids))
             write_similarity_file(similarity, join(params['analysis_folder'], params['similarity_file']))
+            cherrypy.log("Widget 2: Finished running blast search")
 
         except Exception as e:
             cherrypy.log("Widget 2: Error running blast search: {0}".format(e))
-            return "Sorry something went wrong. Make sure the paths to your files are correct and " \
-                   "that the correct version of blast is installed.<br>Exception: {0}".format(e)
+            return "Sorry, something went wrong. Make sure the paths to your files are correct and " \
+                   "that the correct version of blast is installed.<br><br>Exception: {0}".format(e)
 
         # Generate the output for the Results tab.
         text = ["Here's the genome IDs we will use to reconstruct the metabolic models in the next widget:<br>"]
@@ -101,7 +105,9 @@ class Widget2(MMinteApp):
             text.append('<br>{0}'.format(g_id))
 
         return text
-    
+
+
 if __name__ == '__main__':
+    cherrypy.config.update({"response.timeout": 1000000})
     app = Widget2()
     app.launch()
