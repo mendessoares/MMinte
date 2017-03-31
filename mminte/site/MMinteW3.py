@@ -1,9 +1,13 @@
 from os import makedirs
 from os.path import join, exists
+from spyre import server
 import cherrypy
 
 from mminte import create_species_models
-from mminte.site import MMinteApp
+from mminte.site import MMinteApp, MMinteRoot
+
+# Set custom cherrypy Root.
+server.Root = MMinteRoot
 
 
 class Widget3(MMinteApp):
@@ -68,34 +72,35 @@ class Widget3(MMinteApp):
             except Exception as e:
                 cherrypy.log('Widget 3: Error creating folder "{0}" for analysis files: {1}'
                              .format(params['analysis_folder'], e))
-                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
-                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+                return 'Sorry, something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br><br>Exception: {1}'.format(params['analysis_folder'], e)
         model_folder = join(params['analysis_folder'], params['model_folder'])
         if not exists(model_folder):
             try:
                 makedirs(model_folder)
             except Exception as e:
                 cherrypy.log('Widget 3: Error creating folder "{0}" for model files: {1}'
-                             .format(params['model_folder'], e))
-                return 'Sorry something went wrong creating the folder "{0}" for the model files. Make sure ' \
-                       'the path to the folder is correct.<br>Exception: {1}'.format(params['model_folder'], e)
+                             .format(model_folder, e))
+                return 'Sorry, something went wrong creating the folder "{0}" for the single species ' \
+                       'model files. Make sure the path to the folder is correct.<br><br>' \
+                       'Exception: {1}'.format(model_folder, e)
         genome_ids_file = join(params['analysis_folder'], params['genome_ids_file'])
-        try:
-            with open(genome_ids_file, 'r') as handle:
-                genome_ids = [line.strip() for line in handle]
-        except Exception as e:
-            cherrypy.log('Widget 3: error reading genome IDs file "{0}": {1}'.format(genome_ids_file, e))
+        if not exists(genome_ids_file):
+            cherrypy.log('Widget 3: genome IDs file "{0}" was not found'.format(genome_ids_file))
             return 'Sorry, genome IDs file "{0}" was not found. Make sure the path to the file is correct.' \
-                   '<br>Exception: {1}'.format(genome_ids_file, e)
+                   .format(genome_ids_file)
 
         # Create single species models using ModelSEED.
         try:
+            with open(genome_ids_file, 'r') as handle:
+                genome_ids = [line.strip() for line in handle]
             cherrypy.log('Widget 3: Started creating models for {0} genomes'.format(len(genome_ids)))
             model_filenames = create_species_models(genome_ids, model_folder)
-            cherrypy.log('Widget 3: Created and downloaded {0} models'.format(len(model_filenames)))
             output_filename = join(params['analysis_folder'], params['single_models_file'])
             with open(output_filename, 'w') as handle:
                 handle.write('\n'.join(model_filenames))
+            cherrypy.log('Widget 3: Created and downloaded {0} models'.format(len(model_filenames)))
+
         except Exception as e:
             cherrypy.log('Widget 3: Error creating models: {0}'.format(e))
             return "Sorry something went wrong creating metabolic models using ModelSEED.<br>" \
@@ -106,7 +111,9 @@ class Widget3(MMinteApp):
                "If you are still missing models, go ahead and run this widget again. A list of " \
                "the model file names was stored in {2}" \
                .format(len(genome_ids), len(model_filenames), output_filename)
-    
+
+
 if __name__ == '__main__':
+    cherrypy.config.update({"response.timeout": 1000000})
     app = Widget3()
     app.launch()
