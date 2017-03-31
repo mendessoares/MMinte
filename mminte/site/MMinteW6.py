@@ -2,14 +2,19 @@ from pkg_resources import resource_filename
 from os.path import join, exists
 from os import makedirs
 import webbrowser
+from spyre import server
 import cherrypy
 
 from mminte import make_d3_source, read_similarity_file, read_correlation_file, read_growth_rates_file
-from mminte.site import MMinteApp
+from mminte.site import MMinteApp, MMinteRoot
+
+# Set custom cherrypy Root.
+server.Root = MMinteRoot
 
 
 class Widget6(MMinteApp):
     """ Widget 6 application for spyre """
+
     title = 'Widget 6'
 
     def __init__(self):
@@ -25,13 +30,6 @@ class Widget6(MMinteApp):
                       'for storing the files for this analysis',
              "value": self.getRoot().analysisFolder()},
 
-            {"type": "dropdown",
-             "key": "browser_tab",
-             "label": "Do you want the network to be plotted in this browser tab or in a new tab",
-             "options": [{"label": "This tab", "value": "Current"},
-                         {"label": "New tab", "value": "New"}],
-             "value": 'Current'},
-
             {"type": "text",
              "key": "correlation_file",
              "label": "Enter the name of the file with the information about the correlations between associated OTUs",
@@ -45,7 +43,14 @@ class Widget6(MMinteApp):
             {"type": "text",
              "key": "growth_rates_file",
              "label": "Enter the name of the file with growth rates information",
-             "value": "growth_rates.csv"}
+             "value": "growth_rates.csv"},
+
+            {"type": "dropdown",
+             "key": "browser_tab",
+             "label": "Do you want the network to be plotted in this browser tab or in a new tab",
+             "options": [{"label": "This tab", "value": "Current"},
+                         {"label": "New tab", "value": "New"}],
+             "value": 'Current'},
         ]
 
         self.controls = [
@@ -75,47 +80,53 @@ class Widget6(MMinteApp):
             except Exception as e:
                 cherrypy.log('Widget 6: Error creating folder "{0}" for analysis files: {1}'
                              .format(params['analysis_folder'], e))
-                return 'Sorry something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
-                       'the path to the file is correct.<br>Exception: {1}'.format(params['analysis_folder'], e)
+                return 'Sorry, something went wrong creating the folder "{0}" for the analysis files. Make sure ' \
+                       'the path to the file is correct.<br><br>Exception: {1}'.format(params['analysis_folder'], e)
         growth_rates_file = join(params['analysis_folder'], params['growth_rates_file'])
         if not exists(growth_rates_file):
             cherrypy.log('Widget 6: growth rates file "{0}" was not found'.format(growth_rates_file))
             return 'Sorry, growth rates file "{0}" was not found. Make sure the path to the file is correct.' \
                 .format(growth_rates_file)
-        growth_rates = read_growth_rates_file(growth_rates_file)
         similarity_file = join(params['analysis_folder'], params['similarity_file'])
         if not exists(similarity_file):
             cherrypy.log('Widget 6: similarity file "{0}" was not found'.format(similarity_file))
-            return 'Sorry, growth rates file "{0}" was not found. Make sure the path to the file is correct.' \
+            return 'Sorry, similarity file "{0}" was not found. Make sure the path to the file is correct.' \
                 .format(similarity_file)
-        similarity = read_similarity_file(similarity_file)
         if not exists(params['correlation_file']):
-            cherrypy.log('Widget 6: similarity file "{0}" was not found'.format(similarity_file))
-            return 'Sorry, growth rates file "{0}" was not found. Make sure the path to the file is correct.' \
-                .format(similarity_file)
-        correlation = read_correlation_file(params['correlation_file'])
-
-        self.getRoot().analysisFolder(params['analysis_folder'])
+            cherrypy.log('Widget 6: correlation file "{0}" was not found'.format(params['correlation_file']))
+            return 'Sorry, correlation file "{0}" was not found. Make sure the path to the file is correct.' \
+                .format(params['correlation_file'])
 
         # Generate data for plot of interaction network.
-        make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
+        try:
+            cherrypy.log('Widget 6: Started generating data for plot of interaction network')
+            self.getRoot().analysisFolder(params['analysis_folder'])
+            growth_rates = read_growth_rates_file(growth_rates_file)
+            similarity = read_similarity_file(similarity_file)
+            correlation = read_correlation_file(params['correlation_file'])
+            make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
+            cherrypy.log('Widget 6: Finished generating data for plot of interaction network')
+
+        except Exception as e:
+            cherrypy.log('Widget 6: Error generating data for plot of network: {0}'.format(e))
+            return 'Sorry, something went wrong. Make sure the locations of your files are correct.<br><br>' \
+                   'Exception: {0}'.format(e)
 
         # Generate the output for the Results tab.
-        text = ["The plot with the network of interactions between your organisms is shown below or"
-                "on a new tab.<br>The shading of the nodes indicates how close the sequence of the "
-                "OTU is to the sequence of the genome. The darker the node, the higher the similarity.<br"
+        text = ["The plot with the network of interactions between your organisms is shown below or "
+                "on a new tab.<br><br>The shading of the nodes indicates how close the sequence of the "
+                "OTU is to the sequence of the genome. The darker the node, the higher the similarity.<br><br>"
                 "The length and thickness of the links reflect the association values on the initial "
-                "file you provided. The shorter and thicker the link, the higher the association value.<br"
+                "file you provided. The shorter and thicker the link, the higher the association value.<br><br>"
                 "The colors of the links reflect the kind of interaction. The red, green and grey "
-                "represent negative, positive and no interaction, respectively.<br>"
+                "represent negative, positive and no interaction, respectively.<br><br>"
                 "<a href='http://d3js.org/'>D3 is awesome</a>! If you mouse over the nodes, you get "
-                "the id of the OTU, and if you click a node and drag it, the network will follow it."]
-
+                "the ID of the OTU, and if you click a node and drag it, the network will follow it."]
         if params['browser_tab'] == 'Current':
             with open(resource_filename(__name__, 'static/plot.html')) as page:
                 text.append(page.read())
         else:
-            webbrowser.open('http://localhost:8080/widget6_out', new=1)
+            webbrowser.open('http://localhost:{0}/widget6_out'.format(cherrypy.server.socket_port), new=1)
 
         return text
 
