@@ -182,10 +182,11 @@ def read_correlation_file(correlation_filename):
             line_num += 1
             fields = line.strip().split()
             if len(fields) != 3:
-                raise ValueError('Line {0} in correlation file must have three fields'.format(line_num))
+                raise ValueError('Line {0} in file "{1}" must have three fields'
+                                 .format(line_num, correlation_filename))
             value = float(fields[2])
             if value < -1.0 or value > 1.0:
-                raise ValueError('Correlation value {0} on line {1} in correlation file is out of range'
-                                 .format(value, line_num))
+                raise ValueError('Correlation value {0} on line {1} in file "{2}" is out of range'
+                                 .format(value, line_num, correlation_filename))
             correlations.append((fields[0], fields[1], value))
     return correlations

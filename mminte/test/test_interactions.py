@@ -47,3 +47,19 @@ class TestInteractions:
         source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
         with pytest.raises(IOError):
             mminte.create_interaction_models(source_models, gettempdir())
+
+    def test_bad_growth_rates_file(self, data_folder):
+        with pytest.raises(IOError):
+            mminte.read_growth_rates_file(join(data_folder, 'BAD.csv'))
+
+    def test_bad_diet_file(self, data_folder):
+        with pytest.raises(IOError):
+            mminte.read_diet_file(join(data_folder, 'BAD.txt'))
+
+    def test_invalid_diet_fields(self, data_folder):
+        with pytest.raises(ValueError):
+            mminte.read_correlation_file(join(data_folder, 'diet_fields.txt'))
+
+    def test_invalid_diet_value(self, data_folder):
+        with pytest.raises(ValueError):
+            mminte.read_correlation_file(join(data_folder, 'diet_value.txt'))

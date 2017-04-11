@@ -32,34 +32,6 @@ def get_all_pairs(source_models):
     return [pair for pair in combinations(source_models, 2)]
 
 
-def read_diet_file(diet_filename):
-    """ Read a diet file and convert to medium dictionary.
-
-    Each line of the diet file has three fields: (1) exchange reaction ID, (2) reaction name,
-    and (3) absolute value of bound in direction of metabolite creation (i.e. lower bound
-    for `met <--` or upper bound for `met -->`). The first line of the file is a header that
-    is ignored and the reaction name field is not used. Fields are separated by tabs.
-
-    Parameters
-    ----------
-    diet_filename : str
-        Path to file with nutrient conditions for a diet
-
-    Returns
-    -------
-    dict
-        Dictionary with reaction ID as key and bound as value
-    """
-
-    medium = dict()
-    with open(diet_filename, 'r') as handle:
-        handle.readline()
-        for line in handle:
-            fields = line.strip().split('\t')
-            medium[fields[0]] = abs(float(fields[2]))
-    return medium
-
-
 def create_species_models(genome_ids, output_folder, replace=False, optimize=False):
     """ Create ModelSEED models from a list of PATRIC genome IDs.
 
@@ -193,6 +165,39 @@ def calculate_growth_rates(pair_models, medium, n_processes=None):
         growth_rates = growth_rates.append(result.get(), ignore_index=True)
     pool.close()
     return growth_rates
+
+
+def read_diet_file(diet_filename):
+    """ Read a diet file and convert to medium dictionary.
+
+    Each line of the diet file has three fields: (1) exchange reaction ID, (2) reaction name,
+    and (3) absolute value of bound in direction of metabolite creation (i.e. lower bound
+    for `met <--` or upper bound for `met -->`). The first line of the file is a header that
+    is ignored and the reaction name field is not used. Fields are separated by tabs.
+
+    Parameters
+    ----------
+    diet_filename : str
+        Path to file with nutrient conditions for a diet
+
+    Returns
+    -------
+    dict
+        Dictionary with reaction ID as key and bound as value
+    """
+
+    medium = dict()
+    with open(diet_filename, 'r') as handle:
+        handle.readline()
+        line_num = 1
+        for line in handle:
+            line_num += 1
+            fields = line.strip().split('\t')
+            if len(fields) != 3:
+                raise ValueError('Line {0} in file "{1}" must have three fields'
+                                 .format(line_num, diet_filename))
+            medium[fields[0]] = abs(float(fields[2]))
+    return medium
 
 
 def read_growth_rates_file(growth_rates_filename):
