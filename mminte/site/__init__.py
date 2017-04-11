@@ -6,4 +6,4 @@ from .MMinteW3 import Widget3
 from .MMinteW4 import Widget4
 from .MMinteW5 import Widget5
 from .MMinteW6 import Widget6
-from .MMrunAll import WidgetRunAll
+from .MMinteWall import WidgetRunAll
