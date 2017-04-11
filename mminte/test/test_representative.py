@@ -10,10 +10,10 @@ import mminte
 class TestRepresentative:
 
     def test_representative(self, data_folder):
-        correlation_filename = join(data_folder, 'correlation.txt')
+        correlations = mminte.read_correlation_file(join(data_folder, 'correlation.txt'))
         sequence_filename = join(data_folder, 'all_otus.fasta')
         unique_filename = join(gettempdir(), 'unique_otus.fasta')
-        num_sequences = mminte.get_unique_otu_sequences(correlation_filename, sequence_filename, unique_filename)
+        num_sequences = mminte.get_unique_otu_sequences(correlations, sequence_filename, unique_filename)
         assert num_sequences == 18
 
         blast_filename = join(gettempdir(), 'blast.txt')
@@ -26,28 +26,30 @@ class TestRepresentative:
         unlink(blast_filename)
 
     def test_missing_otu(self, data_folder):
-        correlation_filename = join(data_folder, 'correlation.txt')
+        correlations = mminte.read_correlation_file(join(data_folder, 'correlation.txt'))
         sequence_filename = join(data_folder, 'missing.fasta')
         unique_filename = join(gettempdir(), 'unique_otus.fasta')
         with pytest.raises(ValueError):
-            mminte.get_unique_otu_sequences(correlation_filename, sequence_filename, unique_filename)
+            mminte.get_unique_otu_sequences(correlations, sequence_filename, unique_filename)
 
-    def test_bad_correlation_file(self, data_folder):
-        correlation_filename = join(data_folder, 'BAD.txt')
-        sequence_filename = join(data_folder, 'missing.fasta')
-        unique_filename = join(gettempdir(), 'unique_otus.fasta')
-        with pytest.raises(IOError):
-            mminte.get_unique_otu_sequences(correlation_filename, sequence_filename, unique_filename)
+    # def test_bad_correlation_file(self, data_folder):
+    #     correlation_filename = join(data_folder, 'BAD.txt')
+    #     sequence_filename = join(data_folder, 'missing.fasta')
+    #     unique_filename = join(gettempdir(), 'unique_otus.fasta')
+    #     with pytest.raises(IOError):
+    #         mminte.get_unique_otu_sequences(correlation_filename, sequence_filename, unique_filename)
 
     def test_bad_all_sequence_file(self, data_folder):
-        correlation_filename = join(data_folder, 'correlation.txt')
+        correlations = mminte.read_correlation_file(join(data_folder, 'correlation.txt'))
         sequence_filename = join(data_folder, 'BAD.fasta')
         unique_filename = join(gettempdir(), 'unique_otus.fasta')
         with pytest.raises(IOError):
-            mminte.get_unique_otu_sequences(correlation_filename, sequence_filename, unique_filename)
+            mminte.get_unique_otu_sequences(correlations, sequence_filename, unique_filename)
 
     def test_bad_unique_sequence_file(self, data_folder):
         unique_filename = join(data_folder, 'BAD.fasta')
         blast_filename = join(gettempdir(), 'blast.txt')
         with pytest.raises(ApplicationError):
             mminte.search(unique_filename, blast_filename)
+
+# @todo Add tests for read and write files

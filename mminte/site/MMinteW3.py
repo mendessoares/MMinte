@@ -98,7 +98,7 @@ class Widget3(MMinteApp):
             model_filenames = create_species_models(genome_ids, model_folder)
             output_filename = join(params['analysis_folder'], params['single_models_file'])
             with open(output_filename, 'w') as handle:
-                handle.write('\n'.join(model_filenames))
+                handle.write('\n'.join(model_filenames)+'\n')
             cherrypy.log('Widget 3: Created and downloaded {0} models'.format(len(model_filenames)))
 
         except Exception as e:

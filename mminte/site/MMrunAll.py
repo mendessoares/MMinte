@@ -108,7 +108,8 @@ class WidgetRunAll(MMinteApp):
         try:
             cherrypy.log('Widget A1: Started getting unique OTU sequences')
             unique_otus_file = join(params['analysis_folder'], 'unique_otus.fasta')
-            get_unique_otu_sequences(params['correlation_file'], params['representative_otu_file'],
+            get_unique_otu_sequences(read_correlation_file(params['correlation_file']),
+                                     params['representative_otu_file'],
                                      unique_otus_file)
             cherrypy.log("Widget A1: Finished getting unique OTU sequences")
 
@@ -123,7 +124,7 @@ class WidgetRunAll(MMinteApp):
             blast_output_file = join(params['analysis_folder'], 'blast.txt')
             genome_ids, similarity = search(unique_otus_file, blast_output_file)
             with open(join(params['analysis_folder'], 'genome_ids.txt'), 'w') as handle:
-                handle.write('\n'.join(genome_ids))
+                handle.write('\n'.join(genome_ids)+'\n')
             write_similarity_file(similarity, join(params['analysis_folder'], 'similarity.csv'))
             cherrypy.log("Widget A2: Finished blast search")
 
@@ -147,7 +148,7 @@ class WidgetRunAll(MMinteApp):
             single_filenames = create_species_models(genome_ids, model_folder)
             output_filename = join(params['analysis_folder'], 'single_model_filenames.txt')
             with open(output_filename, 'w') as handle:
-                handle.write('\n'.join(single_filenames))
+                handle.write('\n'.join(single_filenames)+'\n')
             cherrypy.log('Widget A3: Finished creating and downloading {0} models'.format(len(single_filenames)))
 
         except Exception as e:
@@ -173,7 +174,7 @@ class WidgetRunAll(MMinteApp):
             pair_filenames = create_interaction_models(pairs, output_folder=pair_model_folder)
             output_filename = join(params['analysis_folder'], 'pair_model_filenames.txt')
             with open(output_filename, 'w') as handle:
-                handle.write('\n'.join(pair_filenames))
+                handle.write('\n'.join(pair_filenames)+'\n')
             cherrypy.log("Widget A4: Finished creating {0} community models".format(len(pair_filenames)))
 
         except Exception as e:

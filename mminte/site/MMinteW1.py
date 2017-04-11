@@ -4,7 +4,7 @@ from os import makedirs
 from spyre import server
 import cherrypy
 
-from mminte import get_unique_otu_sequences
+from mminte import get_unique_otu_sequences, read_correlation_file
 from mminte.site import MMinteApp, MMinteRoot
 
 # Set custom cherrypy Root.
@@ -86,7 +86,8 @@ class Widget1(MMinteApp):
         # Get the unique OTU sequences.
         try:
             cherrypy.log('Widget 1: Started getting unique OTU sequences')
-            get_unique_otu_sequences(params['correlation_file'], params['representative_otu_file'],
+            get_unique_otu_sequences(read_correlation_file(params['correlation_file']),
+                                     params['representative_otu_file'],
                                      join(params['analysis_folder'], params['unique_otu_file']))
             cherrypy.log("Widget 1: Finished getting unique OTU sequences")
         except Exception as e:

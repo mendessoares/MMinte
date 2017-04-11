@@ -165,7 +165,7 @@ class Widget4(MMinteApp):
             model_filenames = create_interaction_models(pairs, output_folder=community_folder)
             output_filename = join(params['analysis_folder'], params['pair_models_file'])
             with open(output_filename, 'w') as handle:
-                handle.write('\n'.join(model_filenames))
+                handle.write('\n'.join(model_filenames)+'\n')
             cherrypy.log("Widget 4: Finished creating {0} community models".format(len(model_filenames)))
 
         except Exception as e:

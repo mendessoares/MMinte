@@ -90,7 +90,7 @@ class Widget2(MMinteApp):
             genome_ids, similarity = search(unique_otus_file,
                                             join(params['analysis_folder'], params['blast_output_file']))
             with open(join(params['analysis_folder'], params['genome_ids_file']), 'w') as handle:
-                handle.write('\n'.join(genome_ids))
+                handle.write('\n'.join(genome_ids)+'\n')
             write_similarity_file(similarity, join(params['analysis_folder'], params['similarity_file']))
             cherrypy.log("Widget 2: Finished running blast search")
 
