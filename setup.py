@@ -149,6 +149,7 @@ requirements = [
     'cobra==0.5.11',
     'lxml',
     'mackinac>=0.8.0',
+    'networkx>=1.11',
     'numpy>=1.12.0',
     'pandas>=0.18.0',
     'python-libsbml>=5.12.0',
