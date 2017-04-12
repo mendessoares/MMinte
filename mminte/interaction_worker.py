@@ -163,14 +163,13 @@ def evaluate_interaction(a_together, b_together, a_alone, b_alone):
     """
 
     # Calculate the effect of the presence of species B on the growth rate of species A.
-    # a_alone < 1e-12 should be reported as 0
     if a_alone == 0.:
-        a_alone = float(1e-25)
+        a_alone = growth_rate_cutoff
     a_percent_change = (a_together - a_alone) / a_alone
 
     # Calculate the effect of the presence of species A on the growth rate of species B.
     if b_alone == 0.:
-        b_alone = float(1e-25)
+        b_alone = growth_rate_cutoff
     b_percent_change = (b_together - b_alone) / b_alone
 
     # Set the interaction type based on the percent change values.
