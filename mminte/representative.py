@@ -111,7 +111,7 @@ def search(sequence_filename, output_filename):
             genome_ids.add(fields[1])
             if fields[0] not in query_ids:
                 query_ids.add(fields[0])
-                similarity = similarity.append(pd.Series([fields[0], fields[1], fields[2]],
+                similarity = similarity.append(pd.Series([fields[0], fields[1], float(fields[2])],
                                                          index=similarity_columns),
                                                ignore_index=True)
             else:
