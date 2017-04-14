@@ -89,7 +89,7 @@ def search(sequence_filename, output_filename):
 
     # Run blast to search for matches to known organisms.
     # @todo Should it make me nervous to not use a fully-qualified path here?
-    cmdline = NcbiblastnCommandline(cmd='/Users/m097749/Envs/mminte-py27/bin/blastn',
+    cmdline = NcbiblastnCommandline(cmd='blastn',
                                     query=sequence_filename,
                                     db=join(pkg_resources.resource_filename(__name__, 'data/db'), '16Sdb'),
                                     out=output_filename,
