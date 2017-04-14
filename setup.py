@@ -119,6 +119,7 @@ def install_blast(install_folder, replace_install=False):
 
     else:
         target = join(install_folder, blast_exe)
+        print('adding link at {0} to {1}'.format(target, blast_exe_path))
         if not exists(target):
             os.symlink(blast_exe_path, target)
         print('found {0} installed at {1}'.format(blast_exe, blast_exe_path))
@@ -177,7 +178,7 @@ setup(
     name='mminte',
     version='0.2.2',
     cmdclass={'install': Install},
-    packages=['mminte', 'mminte/site'],  # find_packages(),
+    packages=find_packages(),
     scripts=['bin/launchMMinte'],
     setup_requires=[],
     install_requires=requirements,
