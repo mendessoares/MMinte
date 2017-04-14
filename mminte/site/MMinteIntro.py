@@ -15,7 +15,12 @@ class Intro(MMinteApp):
          "output_id": "Index",
          "on_page_load": True}
     ]
-    
+
+    def getCustomCSS(self):
+        # Remove menu panel from the Intro page.
+        with open(resource_filename(__name__, 'static/mminte_style.css')) as style:
+            return style.read()+'\n.menu{display: none;width:5px;}.content{margin-left: 5px;}'
+
     def getHTML(self, params):
         with open(resource_filename(__name__, 'static/intro.html')) as page:
             return page.read()
