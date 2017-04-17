@@ -160,7 +160,8 @@ requirements = [
 ]
 
 extras = {
-    'site': ['CherryPy>=10.2.0', 'DataSpyre>=0.2.6']
+    'site': ['CherryPy>=10.2.0', 'DataSpyre>=0.2.6'],
+    'test': ['pytest']
 }
 
 all_extras = {''}
@@ -182,7 +183,7 @@ setup(
     scripts=['bin/launchMMinte'],
     setup_requires=[],
     install_requires=requirements,
-    tests_require=['pytest'],
+    tests_require=extras['test'],
     extras_require=extras,
     package_data={
          '': ['data/db/*', 'test/data/*', 'site/static/*']
