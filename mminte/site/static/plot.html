@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!-- source code from http://bl.ocks.org/mbostock/raw/4062045/ -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<style>
+.node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+.link {
+    stroke: #999;
+    stroke-opacity: .6;
+}
+</style>
+<body>
+<script src="d3"></script> <!-- changed this from the source in the website to be local source -->
+<script>
+var colorNodes = d3.scale.linear()
+    .domain([1,2,3,4,5,6])
+    .range(["#3d3d3d","4a4a4a","565656", "#636363", "#707070","#d9d9d9"]); <!-- colors for nodes, gray-scale -->
+
+var colorLinks = d3.scale.linear()
+    .domain([2,1,0])
+    .range(["#2ca02c","#d62728","#c7c7c7"]); <!-- colors for links, green, red, grey -->
+
+d3.json("data4plot_json", function(error, graph) {
+    var width = 1000;
+    var height = 1000;
+
+    var force = d3.layout.force()
+        .charge(-150)
+        .size([width, height])
+        .linkDistance(function(link) {
+           return link.value*20;
+        });
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    if (error) throw error;
+  
+    force.nodes(graph.nodes)
+        .links(graph.links)
+        .start();
+
+    var link = svg.selectAll(".link")
+        .data(graph.links)
+        .enter().append("line")
+        .attr("class", "link")
+        .style("stroke-width", function(d) {return (6*1/d.value);})
+        .style("stroke", function(d) {return colorLinks(d.interaction);});
+
+    var node = svg.selectAll(".node")
+        .data(graph.nodes)
+        .enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 5)
+        .style("fill", function(d) {return colorNodes(d.group);})
+        .call(force.drag);
+
+    node.append("title")
+        .text(function(d) {return d.name;});
+
+    force.on("tick", function() {
+        link.attr("x1", function(d) {return d.source.x;})
+        .attr("y1", function(d) {return d.source.y;})
+        .attr("x2", function(d) {return d.target.x;})
+        .attr("y2", function(d) {return d.target.y;});
+
+        node.attr("cx", function(d) {return d.x;})
+        .attr("cy", function(d) {return d.y;});
+    });
+});
+</script>
