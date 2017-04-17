@@ -1,3 +1,13 @@
+# Announcement 04/17/2017
+## MMinte1.0 is out!!!
+You can dowload it from pypi: https://pypi.python.org/pypi/mminte/1.0.0
+
+Or, you can go to https://github.com/mmundy42/MMinte   and get it from there!
+
+Let us know how it works for you! And please continue citing the original paper!
+
+-H.
+
 # Announcement 03/07/2017
 ## An updated version of MMinte will be coming soon.
 The features include:
