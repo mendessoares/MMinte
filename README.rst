@@ -22,7 +22,7 @@ Note that **MMinte** requires cobrapy 0.5.11. Python versions 2.7.11+, Python 3.
 or Python 3.6+ are recommended.
 
 Virtual environment installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here are step-by-step instructions for installing **MMinte** in a virtual environment.
 
@@ -77,7 +77,7 @@ How to run an analysis with MMinte
 There are two ways to run an analysis with **MMinte**.
 
 In a notebook
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 A tutorial of how to use **MMinte** is provided in a Jupyter notebook. Here's how to
 start Jupyter and run the notebook from the virtual environment.
@@ -106,7 +106,7 @@ start Jupyter and run the notebook from the virtual environment.
 6. Now you can run the cells in the notebook.
 
 In a web browser
-~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^
 
 **MMinte** includes a web site that allows you to run each widget from a web browser.
 The web site runs on your local system and requires that you use a folder on the
