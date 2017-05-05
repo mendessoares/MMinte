@@ -186,7 +186,7 @@ setup(
     tests_require=extras['test'],
     extras_require=extras,
     package_data={
-         '': ['data/db/*', 'test/data/*', 'site/static/*']
+         '': ['data/db/*', 'test/data/*', 'site/static/*', 'notebooks/*']
     },
     author='Helena Mendes-Soares, Michael Mundy, Luis Mendes Soares, Nicholas Chia',
     author_email='microbialmetabolicinteractions@gmail.com',
