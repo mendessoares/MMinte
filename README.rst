@@ -26,33 +26,50 @@ Virtual environment installation
 
 Here are step-by-step instructions for installing **MMinte** in a virtual environment.
 
-1. If virtualenvwrapper is not installed, `follow the directions <https://virtualenvwrapper.readthedocs.io/en/latest/>`__
-   to install virtualenvwrapper.
+1. If virtualenvwrapper is not installed, `follow the directions <https://virtualenvwrapper.readthedocs.io/en/stable/>`_
+   to install virtualenvwrapper. You should also `update your shell startup file
+   <http://virtualenvwrapper.readthedocs.io/en/stable/install.html#shell-startup-file>`_.
+
+   Note on macOS El Capitan there is a known problem with the virtualenvwrapper
+   dependency on the six package. For a work-around use this command:
+
+    $ pip install virtualenvwrapper --upgrade --ignore-installed six
 
 2. Create a virtualenv for **MMinte** with these commands::
 
-    $ mkvirtualenv --python python2 mminte-py27
+    $ mkvirtualenv mminte
 
-   Use the ``--python`` option to select a specific version of Python for the virtualenv. For example,
-   ``python=python3`` to select the current python3 installed on the system.
+   Use the ``--python`` option to select a specific version of Python for the
+   virtualenv. For example, ``python=python3`` to select the current python3
+   installed on the system.
 
-   Note on macOS, matplotlib requires Python be installed as a framework but virtualenv creates a
-   non-framework build of Python. See the `matplotlib FAQ <http://matplotlib.org/1.5.3/faq/virtualenv_faq.html>`__
+   Note on macOS, matplotlib requires Python be installed as a framework but
+   virtualenv creates a non-framework build of Python. See the
+   `matplotlib FAQ <http://matplotlib.org/1.5.3/faq/virtualenv_faq.html>`_
    for details on a workaround.
 
 3. Upgrade pip and setuptools to the latest versions with this command::
 
-    (mminte-py27)$ pip install --upgrade pip setuptools
+    (mminte)$ pip install --upgrade pip setuptools
 
 4. Install the base **MMinte** package with this command::
 
-    (mminte-py27)$ pip install mmminte
+    (mminte)$ pip install mminte
 
-5. If you want to verify the installation with the included tests, install the test dependencies and run
-   the tests with these commands::
+5. If you want to verify the installation with the included tests, install the
+   test dependencies and run the tests with these commands::
 
-    (mminte-py27) pip install mminte[test]
-    (mminte-py27) pytest mminte -v
+    (mminte)$ pip install mminte[test]
+    (mminte)$ pytest mminte -v
+
+6. When you are done using **MMinte**, you can switch back to the system-installed
+   version of Python with this command::
+
+    (mminte)$ deactivate
+
+   Start the **MMinte** virtualenv again with this command::
+
+    (mminte)$ workon mminte
 
 How to run an analysis with MMinte
 ----------------------------------
@@ -67,21 +84,24 @@ start Jupyter and run the notebook from the virtual environment.
 
 1. Install Jupyter with this command::
 
-    (mminte-py27)$ pip install jupyter
+    (mminte)$ pip install jupyter
 
 2. Install a kernel that uses the virtualenv installation with this command::
 
-    (mminte-py27)$ ipython kernel install --name "MMinte_Python27" --user
+    (mminte)$ ipython kernel install --name "MMinte" --user
 
 3. Start the Jupyter notebook server with this command::
 
-    (mminte-py27)$ jupyter notebook
+    (mminte)$ jupyter notebook
 
    Jupyter opens a web page in your default browser with a file browser.
 
-4. Navigate to the "documentation_builder" folder and click on the "tutorial.ipynb" notebook.
+4. Navigate to the folder where **MMinte** is installed (use `pip show mminte` to
+   find the folder) and in the "notebooks" folder click on the "tutorial.ipynb"
+   notebook.
 
-5. After the notebook opens, from the "Kernel" menu, select "Change kernel" and click on "MMinte_Python27".
+5. After the notebook opens, from the "Kernel" menu, select "Change kernel" and
+   click on "MMinte".
 
 6. Now you can run the cells in the notebook.
 
@@ -94,11 +114,11 @@ local system for storing the results of the analysis. Here's how to start the we
 
 1. Install the additional packages needed for the web site interface with this command::
 
-    (mminte-py27)$ pip install mminte[site]
+    (mminte)$ pip install mminte[site]
 
 2. Start the web server with this command::
 
-    (mminte-py27)$ launchMMinte
+    (mminte)$ launchMMinte
     Logging to "/var/folders/pz/r04ddhtx6vgb48tg0dn5cys8vz00jn/T" folder
     [14/Apr/2017:14:25:04] ENGINE Listening for SIGHUP.
     [14/Apr/2017:14:25:04] ENGINE Listening for SIGTERM.
@@ -117,7 +137,7 @@ local system for storing the results of the analysis. Here's how to start the we
 3. If another service is using port 8080, you can start the web server on a different
    port with this command::
 
-    (mminte-py27)$ launchMMinte --port 8099
+    (mminte)$ launchMMinte --port 8099
 
 4. Open a web browser and go to ``http://localhost:8080`` (change the port number
    if you started the web server on a different port) and follow the directions to
@@ -125,6 +145,14 @@ local system for storing the results of the analysis. Here's how to start the we
 
 Release Notes
 -------------
+
+Version 1.0.1 (May 5, 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Updated directions for virtual environment installation
+* Updated version dependency for mackinac
+* Fixed reading files with different newline characters
+* Added notebooks to package distribution and updated directions
 
 Version 1.0 (April 17, 2017)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
