@@ -63,3 +63,8 @@ class TestInteractions:
     def test_invalid_diet_value(self, data_folder):
         with pytest.raises(ValueError):
             mminte.read_correlation_file(join(data_folder, 'diet_value.txt'))
+
+    def test_create_species_model(self):
+        single_models = mminte.create_species_models(['226186.12'], gettempdir())
+        assert len(single_models) == 1
+        assert single_models[0] == gettempdir() + '/226186.12.json'
