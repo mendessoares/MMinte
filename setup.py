@@ -177,7 +177,7 @@ except:
 
 setup(
     name='mminte',
-    version='1.0.0',
+    version='1.0.1',
     cmdclass={'install': Install},
     packages=find_packages(),
     scripts=['bin/launchMMinte'],
