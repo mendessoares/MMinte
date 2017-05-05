@@ -175,7 +175,7 @@ def read_correlation_file(correlation_filename):
     """
 
     correlations = list()
-    with open(correlation_filename, 'r') as handle:
+    with open(correlation_filename, 'rU') as handle:
         handle.readline()  # Skip header line
         line_num = 1
         for line in handle:

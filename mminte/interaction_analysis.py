@@ -8,9 +8,6 @@ from mackinac import get_modelseed_model_stats, reconstruct_modelseed_model, gap
     create_cobra_model_from_modelseed_model, delete_modelseed_model
 from mackinac.SeedClient import ObjectNotFoundError
 
-# import mackinac
-# mackinac.modelseed.ms_client.url = 'http://p3c.theseed.org/dev1/services/ProbModelSEED'
-
 from .interaction_worker import growth_rate_columns, create_pair_model, compute_growth_rates
 
 
@@ -187,7 +184,7 @@ def read_diet_file(diet_filename):
     """
 
     medium = dict()
-    with open(diet_filename, 'r') as handle:
+    with open(diet_filename, 'rU') as handle:
         handle.readline()
         line_num = 1
         for line in handle:
