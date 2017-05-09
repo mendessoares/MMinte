@@ -2,19 +2,19 @@ import pytest
 import json
 from os import unlink
 from os.path import join
-from tempfile import gettempdir
 
 import mminte
 
 
 class TestInteractions:
 
-    def test_growth_rates(self, data_folder):
+    def test_growth_rates(self, data_folder, test_folder):
         model_files = ['BT.sbml', 'FP.sbml']
         source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
-        pair_models = mminte.create_interaction_models(source_models, gettempdir())
+        pair_models = mminte.create_interaction_models(source_models, test_folder)
         assert len(pair_models) == 1
-        assert pair_models[0] == '{0}/BTxFP.json'.format(gettempdir()) or pair_models[0] == '{0}/FPxBT.json'.format(gettempdir())
+        assert pair_models[0] == '{0}/BTxFP.json'.format(test_folder) or \
+               pair_models[0] == '{0}/FPxBT.json'.format(test_folder)
 
         western = json.load(open(join(data_folder, 'western.json')))
         growth_rates = mminte.calculate_growth_rates(pair_models, western)
@@ -32,21 +32,21 @@ class TestInteractions:
         for model in pair_models:
             unlink(model)
 
-    def test_not_enough_source(self, data_folder):
+    def test_not_enough_source(self, data_folder, test_folder):
         with pytest.raises(ValueError):
-            mminte.create_interaction_models([(join(data_folder, 'BT.sbml'))], gettempdir())
+            mminte.create_interaction_models([(join(data_folder, 'BT.sbml'))], test_folder)
 
-    def test_bad_source_file(self, data_folder):
+    def test_bad_source_file(self, data_folder, test_folder):
         model_files = ['BT.sbml', 'BAD.sbml']
         source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
         with pytest.raises(IOError):
-            mminte.create_interaction_models(source_models, gettempdir())
+            mminte.create_interaction_models(source_models, test_folder)
 
-    def test_bad_extension(self, data_folder):
+    def test_bad_extension(self, data_folder, test_folder):
         model_files = ['BT.sbml', 'FP.bad']
         source_models = mminte.get_all_pairs([join(data_folder, x) for x in model_files])
         with pytest.raises(IOError):
-            mminte.create_interaction_models(source_models, gettempdir())
+            mminte.create_interaction_models(source_models, test_folder)
 
     def test_bad_growth_rates_file(self, data_folder):
         with pytest.raises(IOError):
@@ -64,7 +64,8 @@ class TestInteractions:
         with pytest.raises(ValueError):
             mminte.read_correlation_file(join(data_folder, 'diet_value.txt'))
 
-    def test_create_species_model(self):
-        single_models = mminte.create_species_models(['226186.12'], gettempdir())
+    def test_create_species_model(self, test_folder):
+        single_models = mminte.create_species_models(['226186.12'], test_folder)
         assert len(single_models) == 1
-        assert single_models[0] == gettempdir() + '/226186.12.json'
+        assert single_models[0] == test_folder + '/226186.12.json'
+        unlink(single_models[0])
