@@ -147,9 +147,9 @@ class Install(_install):
 
 requirements = [
     'biopython>=1.66',
-    'cobra==0.5.11',
+    'cobra>=0.5.11',
     'lxml',
-    'mackinac>=0.8.2',
+    'mackinac>=0.8.3',
     'networkx>=1.11',
     'numpy>=1.12.0',
     'pandas>=0.18.0',
