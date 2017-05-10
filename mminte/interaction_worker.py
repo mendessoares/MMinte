@@ -129,7 +129,7 @@ def apply_medium(model, medium):
 
     # Still not sure about using boundary attribute of cobra reaction because think
     # it includes reactions that are not at the boundary (e.g. sink reactions).
-    exchange_reactions = set(model.reactions.query(lambda x: x.startswith('EX_')))
+    exchange_reactions = set(model.reactions.query(lambda x: x.startswith('EX_'), 'id'))
 
     # Turn off reactions not present in media.
     for reaction in (exchange_reactions - media_reactions):

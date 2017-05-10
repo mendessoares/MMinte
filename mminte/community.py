@@ -1,11 +1,19 @@
 import re
-import json
 import six
 from warnings import warn
 from os.path import splitext
+from pkg_resources import parse_version
 
 from cobra.io import load_matlab_model, load_json_model, read_sbml_model
-from cobra.core import Model, Reaction, Solution
+from cobra.core import Model
+from cobra import __version__ as cobra_version
+
+# Can we use new features in cobra 0.6?
+cobra06 = parse_version(cobra_version) >= parse_version('0.6.0')
+if cobra06:
+    from cobra.util.solver import linear_reaction_coefficients
+    from cobra.util.solver import set_objective
+
 
 # Regular expression for compartment suffix on ModelSEED IDs
 modelseed_suffix_re = re.compile(r'_([ce])$')
@@ -131,24 +139,22 @@ def copy_exchange_reaction(reaction):
         Exchange reaction for community model
     """
 
-    # Confirm reaction has only one metabolite and metabolite coefficient is negative.
-    if len(reaction.metabolites) > 1:
-        warn('Model {0} exchange reaction {1} has {2} metabolites (expected one metabolite)'
-             .format(reaction.model.id, reaction.id, len(reaction.metabolites)))
-    for metabolite in reaction.metabolites:
-        if reaction.metabolites[metabolite] >= 0:
-            warn('Model {0} exchange reaction {1} metabolite {2} has positive coefficient (expected negative)'
-                 .format(reaction.model.id, reaction.id, metabolite.id))
-
     # Make a copy of the reaction. Since exchange reactions are shared by all species in the
     # community model, set the lower and upper bounds to default values.
     copy_reaction = reaction.copy()
-    copy_reaction.lower_bound = -1000.
-    copy_reaction.upper_bound = 1000.
-    copy_reaction.objective_coefficient = 0.
+    copy_reaction.bounds = (-1000., 1000)
+
+    # Confirm reaction has only one metabolite and metabolite coefficient is negative.
+    reaction_metabolites = copy_reaction.metabolites
+    if len(reaction_metabolites) > 1:
+        warn('Model {0} exchange reaction {1} has {2} metabolites (expected one metabolite)'
+             .format(reaction.model.id, reaction.id, len(reaction_metabolites)))
+    metabolite = six.next(six.iterkeys(reaction_metabolites))
+    if reaction_metabolites[metabolite] >= 0:
+        warn('Model {0} exchange reaction {1} metabolite {2} has positive coefficient (expected negative)'
+             .format(reaction.model.id, reaction.id, metabolite.id))
 
     # Put the metabolite in the community compartment.
-    metabolite = six.next(six.iterkeys(copy_reaction.metabolites))
     metabolite.compartment = community_compartment
     metabolite.id = _change_compartment(metabolite.id, community_compartment, metabolite.notes['type'])
 
@@ -217,10 +223,20 @@ def create_community_model(source_models):
                             .format(model.id, model_filename))
         model_ids.add(model.id)
 
-        # Check for multiple objectives in the model.
-        if len(model.objective) > 1:
-            raise Exception('More than one objective for model {0}, only one growth objective is allowed'
-                            .format(model_filename))
+        # Check for multiple objectives in the model (which changed significantly in cobra 0.6).
+        if cobra06:
+            linear_coefficients = linear_reaction_coefficients(model)
+            if len(linear_coefficients) != 1:
+                raise Exception('Wrong number of objectives for model {0}, only one growth objective is allowed'
+                                .format(model_filename))
+            objective_id = '{0}_{1}'.format(model.id, six.next(six.iterkeys(linear_coefficients)).id)
+            objective_value = six.next(six.itervalues(linear_coefficients))
+        else:
+            if len(model.objective) != 1:
+                raise Exception('Wrong number of objectives for model {0}, only one growth objective is allowed'
+                                .format(model_filename))
+            objective_id = '{0}_{1}'.format(model.id, six.next(six.iterkeys(model.objective)).id)
+            objective_value = six.next(six.itervalues(model.objective))
 
         # All metabolites need to have a compartment suffix.
         for metabolite in model.metabolites:
@@ -230,13 +246,20 @@ def create_community_model(source_models):
             raise Exception('Unknown compartment suffixes found in metabolites for {0}'.format(model_filename))
 
         # Get the exchange reactions from the species model.
-        exchange_reactions = model.reactions.query(lambda x: x.startswith('EX_'))
+        exchange_reactions = model.reactions.query(lambda x: x.startswith('EX_'), 'id')
 
         # Add any exchange reactions that are not already in the community model.
         for reaction in exchange_reactions:
             if reaction.id not in exchange_reaction_ids:
                 exchange_reaction_ids.add(reaction.id)
-                community.add_reaction(copy_exchange_reaction(reaction))
+                if cobra06:
+                    metabolite = six.next(six.iterkeys(reaction.metabolites)).copy()
+                    metabolite.compartment = community_compartment
+                    metabolite.id = _change_compartment(metabolite.id, community_compartment, metabolite.notes['type'])
+                    rxn = community.add_boundary(metabolite)
+                    rxn.id = reaction.id  # Keep same ID as species model
+                else:
+                    community.add_reactions([copy_exchange_reaction(reaction)])
 
         # Update the reaction IDs with species prefix and convert exchange reactions to transport reactions.
         for reaction in model.reactions:
@@ -248,8 +271,7 @@ def create_community_model(source_models):
                     _change_compartment(e_metabolite.id, community_compartment, e_metabolite.notes['type']))
                 reaction.add_metabolites({u_metabolite: 1.})
                 reaction.id = '{0}_TR_{1}'.format(model.id, reaction.id[3:])  # Strip "EX_" prefix
-                reaction.lower_bound = -1000.
-                reaction.upper_bound = 1000.
+                reaction.bounds = (-1000., 1000.)
             else:
                 reaction.id = '{0}_{1}'.format(model.id, reaction.id)
 
@@ -260,25 +282,30 @@ def create_community_model(source_models):
 
         # Add the species model to the community model.
         community += model
+        if cobra06:
+            # Workaround until agreement reached on issue #505.
+            objective_reaction = community.reactions.get_by_id(objective_id)
+            set_objective(community, {objective_reaction: objective_value}, additive=True)
         species = {
             'id': model.id,
-            'objective': six.next(six.iterkeys(model.objective)).id,
+            'objective': objective_id,
             'filename': model_filename
         }
         community.notes['species'].append(species)
 
     # Update the community ID to include all of the species in the community.
-    # @todo Could the ID get too long for a large community?
+    # Note that the community ID is used as the file name when saving the
+    # community model to a JSON file.
     community.id = 'x'.join(model_ids)
     return community
 
 
-def single_species_knockout(model, species_id):
+def single_species_knockout(community, species_id):
     """ Knockout a species from a community model.
 
     Parameters
     ----------
-    model : cobra.Model
+    community : cobra.Model
         Community model
     species_id : str
         ID of species to knockout from community model
@@ -295,31 +322,51 @@ def single_species_knockout(model, species_id):
     """
 
     # Make sure the species is in the community model.
-    species_id_list = [x['id'] for x in model.notes['species']]
-    if species_id not in species_id_list:
+    species_index = -1
+    for index in range(len(community.notes['species'])):
+        if community.notes['species'][index]['id'] == species_id:
+            species_index = index
+    if species_index < 0:
         raise Exception('Species {0} is not a member of the community'.format(species_id))
 
-    # Set lower and upper bound of all species reactions to zero.
-    species_reactions = model.reactions.query(lambda r: r.startswith(species_id))
-    saved_bounds = dict()
-    for reaction in species_reactions:
-        saved_bounds[reaction.id] = reaction.bounds
-        reaction.knock_out()
+    if cobra06:
+        with community:
+            # Knock out all of the reactions for the specified species.
+            species_reactions = community.reactions.query(lambda r: r.startswith(species_id), 'id')
+            for reaction in species_reactions:
+                reaction.knock_out()
 
-    # Knockout the species objective reactions.
-    species_objectives = dict()
-    for reaction in model.objective:
-        if reaction.id.startswith(species_id):
-            species_objectives[reaction] = reaction.objective_coefficient
-            reaction.objective_coefficient = 0.
+            # Remove the species objective from the community model objective.
+            species_objective = community.reactions.get_by_id(community.notes['species'][species_index]['objective'])
+            linear_coefficients = linear_reaction_coefficients(community)
+            del linear_coefficients[species_objective]
+            set_objective(community, linear_coefficients)
 
-    # Optimize the community model.
-    solution = model.optimize()
+            # Optimize the community model with the specified species knocked out.
+            solution = community.optimize()
 
-    # Restore all species reactions to original values.
-    for reaction in species_reactions:
-        reaction.bounds = saved_bounds[reaction.id]
-    for reaction in species_objectives:
-        reaction.objective_coefficient = species_objectives[reaction]
+    else:
+        # Knock out all of the reactions for the specified species.
+        species_reactions = community.reactions.query(lambda r: r.startswith(species_id), 'id')
+        saved_bounds = dict()
+        for reaction in species_reactions:
+            saved_bounds[reaction.id] = reaction.bounds
+            reaction.knock_out()
+
+        # Remove the species objective from the community model objective.
+        species_objectives = dict()
+        for reaction in community.objective:
+            if reaction.id.startswith(species_id):
+                species_objectives[reaction] = reaction.objective_coefficient
+                reaction.objective_coefficient = 0.
+
+        # Optimize the community model with the specified species knocked out.
+        solution = community.optimize()
+
+        # Restore all species reactions to original values.
+        for reaction in species_reactions:
+            reaction.bounds = saved_bounds[reaction.id]
+        for reaction in species_objectives:
+            reaction.objective_coefficient = species_objectives[reaction]
 
     return solution
