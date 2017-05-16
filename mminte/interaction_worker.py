@@ -85,7 +85,7 @@ def compute_growth_rates(pair_filename, medium):
                          b_solution.x_dict[b_objective], a_percent_change, b_percent_change],
                          index=growth_rate_columns)
     else:
-        details = Series([a_id, b_id, 'None', 0., 0., 0., 0., 0., 0., 0.], index=growth_rate_columns)
+        details = Series([a_id, b_id, 'Empty', 0., 0., 0., 0., 0., 0., 0.], index=growth_rate_columns)
         if t_solution.status == 'optimal':
             details.set_value('TOGETHER', t_solution.f)
             details.set_value('A_TOGETHER', t_solution.x_dict[a_objective])
