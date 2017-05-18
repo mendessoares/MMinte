@@ -1,28 +1,26 @@
 from pkg_resources import resource_filename
 from os.path import exists, join
 from os import makedirs
-from spyre import server
 import cherrypy
 
 from mminte import get_unique_otu_sequences, read_correlation_file
 from mminte.site import MMinteApp, MMinteRoot
 
-# Set custom cherrypy Root.
-server.Root = MMinteRoot
-
 
 class Widget1(MMinteApp):
     """ Widget 1 application for spyre """
-    title = 'Widget 1'
+
+    title = 'Widget 1'  # Must be here for button label
 
     def __init__(self):
+
         self.inputs = [
             {"type": "text",
              "key": "analysis_folder",
              "label": "In this widget we are going to create a file with the sequences of the OTUs "
                       "that will be required for the rest of the analysis.<br><br> "
                       "Enter the location of the folder for storing the files for this analysis",
-             "value": self.getRoot().analysisFolder()},
+             "value": self.analysis_folder},
 
             {"type": "text",
              "key": "correlation_file",
@@ -59,6 +57,29 @@ class Widget1(MMinteApp):
         ]
 
         self.tabs = ["Results"]
+
+        self.root = MMinteRoot(
+            templateVars=self.templateVars,
+            title=self.title,
+            inputs=self.inputs,
+            outputs=self.outputs,
+            controls=self.controls,
+            tabs=self.tabs,
+            spinnerFile=self.spinnerFile,
+            getJsonDataFunction=self.getJsonData,
+            getDataFunction=self.getData,
+            getTableFunction=self.getTable,
+            getPlotFunction=self.getPlot,
+            getImageFunction=self.getImage,
+            getD3Function=self.getD3,
+            getCustomJSFunction=self.getCustomJS,
+            getCustomCSSFunction=self.getCustomCSS,
+            getCustomHeadFunction=self.getCustomHead,
+            getHTMLFunction=self.getHTML,
+            getDownloadFunction=self.getDownload,
+            noOutputFunction=self.noOutput,
+            storeUploadFunction=self.storeUpload,
+            prefix=self.prefix)
     
     def getHTML(self, params):
         """ Run Widget 1 and generate HTML output for Results tab. """

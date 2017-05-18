@@ -1,19 +1,16 @@
 from pkg_resources import resource_filename
 from os import makedirs
 from os.path import join, exists
-from spyre import server
 import cherrypy
 
 from mminte import create_interaction_models, get_all_pairs, read_similarity_file, read_correlation_file
 from mminte.site import MMinteApp, MMinteRoot
 
-# Set custom cherrypy Root.
-server.Root = MMinteRoot
-
 
 class Widget4(MMinteApp):
     """ Widget 4 application for spyre """
-    title = 'Widget 4'
+
+    title = 'Widget 4'  # Must be here for button label
 
     def __init__(self):
         self.inputs = [
@@ -25,7 +22,7 @@ class Widget4(MMinteApp):
                       "with a list of pairs of single species file names to select specific pairs, or (3) the "
                       "correlations file from Widget 1 and the similarity file from Widget 2 to select a subset "
                       "of pairs.<br><br>Enter the location of the folder for storing the files for this analysis",
-             "value": self.getRoot().analysisFolder()},
+             "value": self.analysis_folder},
 
             {"type": "dropdown",
              "key": "pair_input_type",
@@ -89,7 +86,30 @@ class Widget4(MMinteApp):
         ]
 
         self.tabs = ["Results"]
-    
+
+        self.root = MMinteRoot(
+            templateVars=self.templateVars,
+            title=self.title,
+            inputs=self.inputs,
+            outputs=self.outputs,
+            controls=self.controls,
+            tabs=self.tabs,
+            spinnerFile=self.spinnerFile,
+            getJsonDataFunction=self.getJsonData,
+            getDataFunction=self.getData,
+            getTableFunction=self.getTable,
+            getPlotFunction=self.getPlot,
+            getImageFunction=self.getImage,
+            getD3Function=self.getD3,
+            getCustomJSFunction=self.getCustomJS,
+            getCustomCSSFunction=self.getCustomCSS,
+            getCustomHeadFunction=self.getCustomHead,
+            getHTMLFunction=self.getHTML,
+            getDownloadFunction=self.getDownload,
+            noOutputFunction=self.noOutput,
+            storeUploadFunction=self.storeUpload,
+            prefix=self.prefix)
+
     def getHTML(self, params):
         """ Run Widget 4 and generate HTML output for Results tab. """
 

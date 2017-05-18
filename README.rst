@@ -146,6 +146,13 @@ local system for storing the results of the analysis. Here's how to start the we
 Release Notes
 -------------
 
+Version 1.0.2 (May 18, 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Updated handling of objectives for compatibility with cobra 0.6
+* Fixed display of interaction network visualization when using different analysis
+  folder in web site interface
+
 Version 1.0.1 (May 5, 2017)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

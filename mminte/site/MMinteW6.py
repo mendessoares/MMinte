@@ -2,20 +2,16 @@ from pkg_resources import resource_filename
 from os.path import join, exists
 from os import makedirs
 import webbrowser
-from spyre import server
 import cherrypy
 
 from mminte import make_d3_source, read_similarity_file, read_correlation_file, read_growth_rates_file
 from mminte.site import MMinteApp, MMinteRoot
 
-# Set custom cherrypy Root.
-server.Root = MMinteRoot
-
 
 class Widget6(MMinteApp):
     """ Widget 6 application for spyre """
 
-    title = 'Widget 6'
+    title = 'Widget 6'  # Must be here for button label
 
     def __init__(self):
         self.inputs = [
@@ -28,7 +24,7 @@ class Widget6(MMinteApp):
                       '<a href="https://d3js.org/">D3</a>, a neat "JavaScript library for manipulating '
                       'documents based on data".<br><br>Enter the location of the folder '
                       'for storing the files for this analysis',
-             "value": self.getRoot().analysisFolder()},
+             "value": self.analysis_folder},
 
             {"type": "text",
              "key": "correlation_file",
@@ -69,6 +65,29 @@ class Widget6(MMinteApp):
 
         self.tabs = ["Results"]
 
+        self.root = MMinteRoot(
+            templateVars=self.templateVars,
+            title=self.title,
+            inputs=self.inputs,
+            outputs=self.outputs,
+            controls=self.controls,
+            tabs=self.tabs,
+            spinnerFile=self.spinnerFile,
+            getJsonDataFunction=self.getJsonData,
+            getDataFunction=self.getData,
+            getTableFunction=self.getTable,
+            getPlotFunction=self.getPlot,
+            getImageFunction=self.getImage,
+            getD3Function=self.getD3,
+            getCustomJSFunction=self.getCustomJS,
+            getCustomCSSFunction=self.getCustomCSS,
+            getCustomHeadFunction=self.getCustomHead,
+            getHTMLFunction=self.getHTML,
+            getDownloadFunction=self.getDownload,
+            noOutputFunction=self.noOutput,
+            storeUploadFunction=self.storeUpload,
+            prefix=self.prefix)
+
     def getHTML(self, params):
         """ Run Widget 6 and generate HTML output for Results tab. """
 
@@ -100,11 +119,11 @@ class Widget6(MMinteApp):
         # Generate data for plot of interaction network.
         try:
             cherrypy.log('Widget 6: Started generating data for plot of interaction network')
-            self.getRoot().analysisFolder(params['analysis_folder'])
             growth_rates = read_growth_rates_file(growth_rates_file)
             similarity = read_similarity_file(similarity_file)
             correlation = read_correlation_file(params['correlation_file'])
             make_d3_source(growth_rates, join(params['analysis_folder'], 'data4plot.json'), similarity, correlation)
+            make_d3_source(growth_rates, self.getRoot().data4plot_filename(), similarity, correlation)
             cherrypy.log('Widget 6: Finished generating data for plot of interaction network')
 
         except Exception as e:
@@ -123,8 +142,7 @@ class Widget6(MMinteApp):
                 "<a href='http://d3js.org/'>D3 is awesome</a>! If you mouse over the nodes, you get "
                 "the ID of the OTU, and if you click a node and drag it, the network will follow it."]
         if params['browser_tab'] == 'Current':
-            with open(resource_filename(__name__, 'static/plot.html')) as page:
-                text.append(page.read())
+            text.append(self.getRoot().widget6_out())
         else:
             webbrowser.open('http://localhost:{0}/widget6_out'.format(cherrypy.server.socket_port), new=1)
 

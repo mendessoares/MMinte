@@ -1,18 +1,15 @@
 from os import makedirs
 from os.path import join, exists
-from spyre import server
 import cherrypy
 
 from mminte import create_species_models
 from mminte.site import MMinteApp, MMinteRoot
 
-# Set custom cherrypy Root.
-server.Root = MMinteRoot
-
 
 class Widget3(MMinteApp):
     """ Widget 3 application for spyre """
-    title = 'Widget 3 '
+
+    title = 'Widget 3 '  # Must be here for button label
 
     def __init__(self):
         self.inputs = [
@@ -27,7 +24,7 @@ class Widget3(MMinteApp):
                       '<a href="mailto:chia.nicholas@mayo.edu">ModelSEED</a> or '
                       '<a href="mailto:microbialmetabolicinteractions@gmail.com">MMinte</a> developers! '
                       '<br><br>Enter the location of the folder for storing the files for this analysis',
-             "value": self.getRoot().analysisFolder()},
+             "value": self.analysis_folder},
 
             {"type": "text",
              "key": "genome_ids_file",
@@ -60,7 +57,30 @@ class Widget3(MMinteApp):
         ]
 
         self.tabs = ["Results"]
-    
+
+        self.root = MMinteRoot(
+            templateVars=self.templateVars,
+            title=self.title,
+            inputs=self.inputs,
+            outputs=self.outputs,
+            controls=self.controls,
+            tabs=self.tabs,
+            spinnerFile=self.spinnerFile,
+            getJsonDataFunction=self.getJsonData,
+            getDataFunction=self.getData,
+            getTableFunction=self.getTable,
+            getPlotFunction=self.getPlot,
+            getImageFunction=self.getImage,
+            getD3Function=self.getD3,
+            getCustomJSFunction=self.getCustomJS,
+            getCustomCSSFunction=self.getCustomCSS,
+            getCustomHeadFunction=self.getCustomHead,
+            getHTMLFunction=self.getHTML,
+            getDownloadFunction=self.getDownload,
+            noOutputFunction=self.noOutput,
+            storeUploadFunction=self.storeUpload,
+            prefix=self.prefix)
+
     def getHTML(self, params):
         """ Run Widget 3 and generate HTML output for Results tab. """
 

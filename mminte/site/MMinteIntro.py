@@ -1,20 +1,42 @@
 from pkg_resources import resource_filename
-from spyre import server
 
 from mminte.site import MMinteApp, MMinteRoot
 
 
-server.Root = MMinteRoot
-
-
 class Intro(MMinteApp):
-    title = 'Intro'
+    """ Introduction widget application for spyre """
 
-    outputs = [
-        {"output_type": "html",
-         "output_id": "Index",
-         "on_page_load": True}
-    ]
+    title = 'Intro'  # Must be here for button label
+
+    def __init__(self):
+        self.outputs = [
+            {"output_type": "html",
+             "output_id": "Index",
+             "on_page_load": True}
+        ]
+
+        self.root = MMinteRoot(
+            templateVars=self.templateVars,
+            title=self.title,
+            inputs=self.inputs,
+            outputs=self.outputs,
+            controls=self.controls,
+            tabs=self.tabs,
+            spinnerFile=self.spinnerFile,
+            getJsonDataFunction=self.getJsonData,
+            getDataFunction=self.getData,
+            getTableFunction=self.getTable,
+            getPlotFunction=self.getPlot,
+            getImageFunction=self.getImage,
+            getD3Function=self.getD3,
+            getCustomJSFunction=self.getCustomJS,
+            getCustomCSSFunction=self.getCustomCSS,
+            getCustomHeadFunction=self.getCustomHead,
+            getHTMLFunction=self.getHTML,
+            getDownloadFunction=self.getDownload,
+            noOutputFunction=self.noOutput,
+            storeUploadFunction=self.storeUpload,
+            prefix=self.prefix)
 
     def getCustomCSS(self):
         # Remove menu panel from the Intro page.

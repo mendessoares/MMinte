@@ -5,18 +5,8 @@ import cherrypy
 from spyre import server
 
 
-class MMinteApp(server.App):
-    """ Base class for spyre apps in MMinte website. """
-
-    def getCustomCSS(self):
-        with open(resource_filename(__name__, 'static/mminte_style.css')) as style:
-            return style.read()
-
-
 class MMinteRoot(server.Root):
     """ Custom cherrypy Root for MMinte website. """
-
-    analysis_folder_path = join(expanduser('~'), 'mminte_site_tutorial')
 
     @cherrypy.expose
     def image1(self):
@@ -43,12 +33,24 @@ class MMinteRoot(server.Root):
             return handle.read()
 
     @cherrypy.expose
-    def data4plot_json(self):
-        with open(join(self.analysisFolder(), 'data4plot.json')) as handle:
-            return handle.read()
+    def data4plot_filename(self):
+        return join(expanduser('~'), '.mminte_data4plot.json')
 
     @cherrypy.expose
-    def analysisFolder(self, value=None):
-        if value is None:
-            return self.analysis_folder_path
-        self.analysis_folder_path = value
+    def data4plot_json(self):
+        with open(self.data4plot_filename()) as handle:
+            return handle.read()
+
+
+class MMinteApp(server.App):
+    """ Base class for spyre apps in MMinte website. """
+
+    root = None
+    analysis_folder = join(expanduser('~'), 'mminte_site_tutorial')
+
+    def getRoot(self):
+        return self.root
+
+    def getCustomCSS(self):
+        with open(resource_filename(__name__, 'static/mminte_style.css')) as style:
+            return style.read()

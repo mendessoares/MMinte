@@ -1,18 +1,15 @@
 from os.path import exists, join
 from os import makedirs
-from spyre import server
 import cherrypy
 
 from mminte import search, write_similarity_file
 from mminte.site import MMinteApp, MMinteRoot
 
-# Set custom cherrypy Root.
-server.Root = MMinteRoot
-
 
 class Widget2(MMinteApp):
     """ Widget 2 application for spyre """
-    title = 'Widget 2'
+
+    title = 'Widget 2'  # Must be here for button label
 
     def __init__(self):
         self.inputs = [
@@ -26,7 +23,7 @@ class Widget2(MMinteApp):
                       "list of unique genome IDs which is used to reconstruct metabolic models for "
                       "the corresponding bacterial species.<br><br>Enter the location of the folder "
                       "for storing the files for this analysis",
-             "value": self.getRoot().analysisFolder()},
+             "value": self.analysis_folder},
 
             {"type": "text",
              "key": "unique_otus_file",
@@ -64,7 +61,30 @@ class Widget2(MMinteApp):
         ]
 
         self.tabs = ["Results"]
-    
+
+        self.root = MMinteRoot(
+            templateVars=self.templateVars,
+            title=self.title,
+            inputs=self.inputs,
+            outputs=self.outputs,
+            controls=self.controls,
+            tabs=self.tabs,
+            spinnerFile=self.spinnerFile,
+            getJsonDataFunction=self.getJsonData,
+            getDataFunction=self.getData,
+            getTableFunction=self.getTable,
+            getPlotFunction=self.getPlot,
+            getImageFunction=self.getImage,
+            getD3Function=self.getD3,
+            getCustomJSFunction=self.getCustomJS,
+            getCustomCSSFunction=self.getCustomCSS,
+            getCustomHeadFunction=self.getCustomHead,
+            getHTMLFunction=self.getHTML,
+            getDownloadFunction=self.getDownload,
+            noOutputFunction=self.noOutput,
+            storeUploadFunction=self.storeUpload,
+            prefix=self.prefix)
+
     def getHTML(self, params):
         """ Run Widget 2 and generate HTML output for Results tab. """
 
