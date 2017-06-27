@@ -122,7 +122,6 @@ def load_model_from_file(filename):
         model = load_json_model(filename)
     else:
         raise IOError('Model file extension not supported for {0}'.format(filename))
-
     return model
 
 
@@ -151,8 +150,7 @@ def save_model_to_file(model, filename):
         save_json_model(model, filename)
     else:
         raise IOError('Model file extension not supported for {0}'.format(filename))
-
-    return model
+    return
 
 
 def copy_exchange_reaction(reaction):
@@ -286,7 +284,7 @@ def create_community_model(source_models):
                     metabolite = six.next(six.iterkeys(reaction.metabolites)).copy()
                     metabolite.compartment = community_compartment
                     metabolite.id = _change_compartment(metabolite.id, community_compartment, metabolite.notes['type'])
-                    rxn = community.add_boundary(metabolite) # This is slow on cobra06
+                    rxn = community.add_boundary(metabolite)  # This is slow on cobra06
                     rxn.id = reaction.id  # Keep same ID as species model
                 else:
                     community.add_reactions([copy_exchange_reaction(reaction)])

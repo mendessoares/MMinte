@@ -101,15 +101,19 @@ def compute_growth_rates(pair_filename, medium):
 def apply_medium(model, medium):
     """ Apply a medium to a model to set the metabolites that can be consumed.
 
+    This function is adapted from the cobra.core.Model.medium setter in cobra 0.6
+    with two differences: (1) if a reaction is in the medium but not in the
+    model, the reaction is ignored (2) when turning off reactions in the model
+    and not in the medium, only exchange reactions with the prefix 'EX_' are 
+    considered (instead of all boundary reactions).
+    
     Parameters
     ----------
-    model : cobra.Model
+    model : cobra.core.Model
         Model to apply medium to
     medium : dict
         Dictionary with exchange reaction ID as key and bound as value
     """
-
-    # Borrowed the code in this function for future compatibility with cobra 0.6.0.
 
     def set_active_bound(reaction, bound):
         if reaction.reactants:
@@ -118,21 +122,21 @@ def apply_medium(model, medium):
             reaction.upper_bound = bound
 
     # Set the given media bounds.
-    media_reactions = set()
+    medium_reactions = set()
     for reaction_id, bound in iteritems(medium):
         try:
             reaction = model.reactions.get_by_id(reaction_id)
-            media_reactions.add(reaction)
+            medium_reactions.add(reaction)
             set_active_bound(reaction, bound)
         except KeyError:
             pass
 
-    # Still not sure about using boundary attribute of cobra reaction because think
-    # it includes reactions that are not at the boundary (e.g. sink reactions).
+    # The boundary attribute of a cobra.core.Reaction also includes demand and
+    # sink reactions that we don't want turned off.
     exchange_reactions = set(model.reactions.query(lambda x: x.startswith('EX_'), 'id'))
 
-    # Turn off reactions not present in media.
-    for reaction in (exchange_reactions - media_reactions):
+    # Turn off reactions not present in medium.
+    for reaction in (exchange_reactions - medium_reactions):
         set_active_bound(reaction, 0)
 
     return

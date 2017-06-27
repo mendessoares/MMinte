@@ -146,8 +146,14 @@ local system for storing the results of the analysis. Here's how to start the we
 Release Notes
 -------------
 
+Version 1.0.3 (June 27, 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Added save_model_to_file() function
+* Added apply_medium() function to default import
+
 Version 1.0.2 (May 18, 2017)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Updated handling of objectives for compatibility with cobra 0.6
 * Fixed display of interaction network visualization when using different analysis
