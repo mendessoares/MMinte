@@ -5,6 +5,7 @@ from os.path import splitext
 from pkg_resources import parse_version
 
 from cobra.io import load_matlab_model, load_json_model, read_sbml_model
+from cobra.io import save_matlab_model, save_json_model, write_sbml_model
 from cobra.core import Model
 from cobra import __version__ as cobra_version
 
@@ -103,12 +104,12 @@ def load_model_from_file(filename):
 
     Returns
     -------
-    cobra.Model
+    cobra.core.Model
         Model object loaded from file
 
     Raises
     ------
-    Exception
+    IOError
         If model file extension is not supported.
     """
 
@@ -119,6 +120,35 @@ def load_model_from_file(filename):
         model = read_sbml_model(filename)
     elif ext == '.json':
         model = load_json_model(filename)
+    else:
+        raise IOError('Model file extension not supported for {0}'.format(filename))
+
+    return model
+
+
+def save_model_to_file(model, filename):
+    """ Save a model to a file based on the extension of the file name.
+
+    Parameters
+    ----------
+    model : cobra.core.Model
+        Model object loaded from file
+    filename : str
+        Path to model file
+
+    Raises
+    ------
+    IOError
+        If model file extension is not supported.
+    """
+
+    (root, ext) = splitext(filename)
+    if ext == '.mat':
+        save_matlab_model(model, filename)
+    elif ext == '.xml' or ext == '.sbml':
+        write_sbml_model(model, filename)
+    elif ext == '.json':
+        save_json_model(model, filename)
     else:
         raise IOError('Model file extension not supported for {0}'.format(filename))
 
@@ -183,7 +213,7 @@ def create_community_model(source_models):
 
     Returns
     -------
-    cobra.Model
+    cobra.core.Model
         Community model
 
     Raises
@@ -256,7 +286,7 @@ def create_community_model(source_models):
                     metabolite = six.next(six.iterkeys(reaction.metabolites)).copy()
                     metabolite.compartment = community_compartment
                     metabolite.id = _change_compartment(metabolite.id, community_compartment, metabolite.notes['type'])
-                    rxn = community.add_boundary(metabolite)
+                    rxn = community.add_boundary(metabolite) # This is slow on cobra06
                     rxn.id = reaction.id  # Keep same ID as species model
                 else:
                     community.add_reactions([copy_exchange_reaction(reaction)])
@@ -305,7 +335,7 @@ def single_species_knockout(community, species_id):
 
     Parameters
     ----------
-    community : cobra.Model
+    community : cobra.core.Model
         Community model
     species_id : str
         ID of species to knockout from community model
