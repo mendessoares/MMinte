@@ -90,7 +90,7 @@ def create_species_models(genome_ids, output_folder, replace=False, optimize=Fal
 
 
 def create_interaction_models(source_models, output_folder, n_processes=None):
-    """ Create two species community models for all pairs in a community.
+    """ Create two species community models for the pairs in a community.
 
     Parameters
     ----------
@@ -125,17 +125,13 @@ def create_interaction_models(source_models, output_folder, n_processes=None):
 
 
 def calculate_growth_rates(pair_models, medium, n_processes=None):
-    """ Calculate growth rates for all pairs in community.
+    """ Calculate growth rates for the pairs in a community.
 
     The medium is a dictionary with an exchange reaction ID as the key and the
     absolute value of bound in direction of metabolite creation as the value
     (i.e. lower bound for `met <--` or upper bound for `met -->`). For example,
 
-    {'EX_h2o': 0.0,
-     'EX_h2s': 1.0,
-     'EX_pi': 10.0
-     ...
-    }
+    {'EX_h2o': 0.0, 'EX_h2s': 1.0, 'EX_pi': 10.0, ...}
 
     Parameters
     ----------
