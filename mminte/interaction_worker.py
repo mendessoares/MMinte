@@ -104,7 +104,7 @@ def apply_medium(model, medium):
     This function is adapted from the cobra.core.Model.medium setter in cobra 0.6
     with two differences: (1) if a reaction is in the medium but not in the
     model, the reaction is ignored (2) when turning off reactions in the model
-    and not in the medium, only exchange reactions with the prefix 'EX_' are 
+    and not in the medium, only exchange reactions with the prefix `EX_` are
     considered (instead of all boundary reactions).
     
     Parameters
