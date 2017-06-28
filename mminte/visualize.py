@@ -1,5 +1,6 @@
 import networkx as nx
 import json
+import six
 
 
 def make_graph(growth_rates, similarity=None, correlations=None):
@@ -144,9 +145,9 @@ def plot_graph(graph):
     edge_widths = nx.get_edge_attributes(graph, 'width')
     edge_colors = nx.get_edge_attributes(graph, 'color')
     node_colors = nx.get_node_attributes(graph, 'color')
-    nx.draw_circular(graph, with_labels=True, width=edge_widths.values(),
-                     edgelist=edge_colors.keys(), edge_color=edge_colors.values(),
-                     nodelist=node_colors.keys(), node_color=node_colors.values())
+    nx.draw_circular(graph, with_labels=True, width=list(six.viewvalues(edge_widths)),
+                     edgelist=edge_colors.keys(), edge_color=list(six.viewvalues(edge_colors)),
+                     nodelist=node_colors.keys(), node_color=list(six.viewvalues(node_colors)))
     return
 
 
