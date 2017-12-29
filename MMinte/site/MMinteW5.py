@@ -65,7 +65,7 @@ class Widget5(server.App):
     
     def getHTML(self,params):
 
-        if params['text16'] == 'Yes' or params['text1'] == "yes":
+        if params['text16'] == 'Yes' or params['text16'] == "yes":
             food = 'Complete'
             comFolder = '../supportFiles/exampleRun/userOutput/communityModels/'
             outFolder = '../supportFiles/exampleRun/userOutput/'

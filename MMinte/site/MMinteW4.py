@@ -62,7 +62,7 @@ class Widget4(server.App):
         
     def getHTML(self,params):
 
-        if params['text14'] == 'Yes' or params['text1'] == "yes":
+        if params['text14'] == 'Yes' or params['text14'] == "yes":
             #list @todo fix this!!! Hacked!
             corrsFile = '../supportFiles/exampleRun/userFiles/corrs.txt'
             similFile = '../supportFiles/exampleRun/userOutput/similFile.txt'
