@@ -48,7 +48,7 @@ class Widget3(server.App):
         
     def getHTML(self,params):
 
-        if params['text11'] == 'Yes' or params['text1'] == "yes":
+        if params['text11'] == 'Yes' or params['text11'] == "yes":
             listIDs = '../supportFiles/exampleRun/userOutput/ids4MS.txt'
             modelFolder = '../supportFiles/exampleRun/userOutput/models/'
 
